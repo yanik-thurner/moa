@@ -1,6 +1,9 @@
 #form {
     width: 80%;
+}
 
+#form tr td > *{
+    width: 80%
 }
 
 #form td{

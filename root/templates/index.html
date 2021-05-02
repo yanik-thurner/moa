@@ -15,15 +15,17 @@
         $(function () {
             $("#slider-range").slider({
                 range: true,
-                min: {{data.season_years_range[0]}},
-                max: {{data.season_years_range[1]}},
-                values: [{{data.season_years_range[0]}}, {{data.season_years_range[1]}}],
+                min: {{data.release_year_range[0]}},
+                max: {{data.release_year_range[1]}},
+                values: [{{filter.release_year_range[0]}}, {{filter.release_year_range[1]}}],
+
                 slide: function (event, ui) {
-                    $("#amount").val(ui.values[0] + " - " + ui.values[1]);
+                    $("#release_year_min").val(ui.values[0] );
+                    $("#release_year_max").val(ui.values[1] );
                 }
             });
-            $("#amount").val($("#slider-range").slider("values", 0) +
-                " - " + $("#slider-range").slider("values", 1));
+            $("#release_year_min").val($("#slider-range").slider("values", 0));
+            $("#release_year_max").val($("#slider-range").slider("values", 1));
         });
     </script>
 
@@ -36,9 +38,13 @@
         });
     </script>
 
+    <!-- D3js -->
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+
     <!-- Our Stuff -->
     <title>Maps of Anime</title>
     <link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.jpg') }}">
 </head>
 <body >
 <h1>Maps of Anime</h1>
@@ -46,31 +52,33 @@
     <table id="form">
         <tr>
             <td><label>Studios: </label></td>
-            <td><select style="width: 400px" class="js-example-basic-multiple" name="states[]" multiple="multiple">
-                <option value="-1" selected="true">All</option>
+            <td><select class="js-example-basic-multiple" name="studios[]" multiple="multiple">
+                <option value="-1" {% if -1 in filter.studios %} selected="true" {% endif %}>All</option>
                 {%  for studio in data.studios %}
-                    <option value="{{ loop.index }}">{{ studio }}</option>
+                    <option value="{{ loop.index }}" {% if loop.index in filter.studios %} selected="true" {% endif %}> {{ studio }}</option>
                 {% endfor %}
             </select></td>
         </tr>
         <tr>
             <td><label>Release Year: </label></td>
             <td>
-                <input type="text" id="amount" readonly style="border:0;  font-weight:bold;">
+                <input type="text" id="release_year_min" name="release_year_min" readonly style="width: 40px; border:0;  font-weight:bold;"> - <input type="text" id="release_year_max" name="release_year_max" readonly style="width: 40px; border:0;  font-weight:bold;">
                 <div id="slider-range"></div>
             </td>
 
         </tr>
         <tr>
             <td><label>Media Type: </label></td>
-            <td><select style="width: 400px" class="js-example-basic-multiple" name="states[]" multiple="multiple">
-                <option value="-1" selected="true">All</option>
-                {%  for studio in data.media_types %}
-                    <option value="{{ loop.index }}">{{ studio }}</option>
+            <td><select class="js-example-basic-multiple" name="media_types[]" multiple="multiple">
+                <option value="-1" {% if -1 in filter.media_types %} selected="true" {% endif %}>All</option>
+                {%  for media_type in data.media_types %}
+                    <option value="{{ loop.index }}" {% if loop.index in filter.media_types %} selected="true" {% endif %}> {{ media_type }}</option>
                 {% endfor %}
             </select></td>
         </tr>
     </table>
+
+    <input type="submit">
 </form>
 
 <!-- Bootstrap Bundle with Popper -->

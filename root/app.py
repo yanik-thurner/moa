@@ -1,14 +1,14 @@
 import json
 
-from flask import Flask, render_template
-import pandas as pd
+from flask import Flask, render_template, request
 import itertools
+import pandas as pd
 
 
 class FilterableData:
     def __init__(self):
         self.studios = None
-        self.season_years_range = None
+        self.release_year_range = None
         self.media_types = None
 
 
@@ -16,8 +16,8 @@ def wrap(preprocessed_data: pd.DataFrame) -> FilterableData:
     # wrap it into AnilistData object
     data = FilterableData()
     data.studios = sorted(set(itertools.chain.from_iterable(preprocessed_data.studios)))
-    data.season_years_range = (preprocessed_data.seasonYear.min(), preprocessed_data.seasonYear.max())
-    data.media_types = set(preprocessed_data.format)
+    data.release_year_range = (preprocessed_data.seasonYear.min(), preprocessed_data.seasonYear.max())
+    data.media_types = sorted(filter(None, set(preprocessed_data.format)))
     return data
 
 
@@ -39,9 +39,15 @@ def preprocess(raw_data: pd.DataFrame) -> FilterableData:
 app = Flask(__name__)
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html", data=filterable_data)
+    filter = FilterableData()
+    filter.studios = x if (x := request.form.getlist('studios[]', type=int)) else [-1]
+    filter.media_types = x if (x := request.form.getlist('media_types[]', type=int)) else [-1]
+    filter.release_year_range = (request.form.get('release_year_min', type=int, default=filterable_data.release_year_range[0]),
+                                 request.form.get('release_year_max', type=int, default=filterable_data.release_year_range[1]))
+    return render_template("index.html", data=filterable_data, filter=filter)
+
 
 
 if __name__ == "__main__":
