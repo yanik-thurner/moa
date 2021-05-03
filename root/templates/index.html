@@ -15,9 +15,9 @@
         $(function () {
             $("#slider-range").slider({
                 range: true,
-                min: {{data.release_year_range[0]}},
-                max: {{data.release_year_range[1]}},
-                values: [{{filter.release_year_range[0]}}, {{filter.release_year_range[1]}}],
+                min: {{available_filter.release_year_range[0]}},
+                max: {{available_filter.release_year_range[1]}},
+                values: [{{selected_filter.release_year_range[0]}}, {{selected_filter.release_year_range[1]}}],
 
                 slide: function (event, ui) {
                     $("#release_year_min").val(ui.values[0] );
@@ -53,9 +53,9 @@
         <tr>
             <td><label>Studios: </label></td>
             <td><select class="js-example-basic-multiple" name="studios[]" multiple="multiple">
-                <option value="-1" {% if -1 in filter.studios %} selected="true" {% endif %}>All</option>
-                {%  for studio in data.studios %}
-                    <option value="{{ loop.index }}" {% if loop.index in filter.studios %} selected="true" {% endif %}> {{ studio }}</option>
+                <option value="-1" {% if -1 in selected_filter.studios %} selected="true" {% endif %}>All</option>
+                {%  for studio in available_filter.studios %}
+                    <option value="{{ loop.index }}" {% if loop.index in selected_filter.studios %} selected="true" {% endif %}> {{ studio }}</option>
                 {% endfor %}
             </select></td>
         </tr>
@@ -70,9 +70,9 @@
         <tr>
             <td><label>Media Type: </label></td>
             <td><select class="js-example-basic-multiple" name="media_types[]" multiple="multiple">
-                <option value="-1" {% if -1 in filter.media_types %} selected="true" {% endif %}>All</option>
-                {%  for media_type in data.media_types %}
-                    <option value="{{ loop.index }}" {% if loop.index in filter.media_types %} selected="true" {% endif %}> {{ media_type }}</option>
+                <option value="-1" {% if -1 in selected_filter.media_types %} selected="true" {% endif %}>All</option>
+                {%  for media_type in available_filter.media_types %}
+                    <option value="{{ loop.index }}" {% if loop.index in selected_filter.media_types %} selected="true" {% endif %}> {{ media_type }}</option>
                 {% endfor %}
             </select></td>
         </tr>
