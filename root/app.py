@@ -38,4 +38,5 @@ if __name__ == "__main__":
     map_data = pipeline.process(preprocessed_data, available_filter, selected_filter)
     t.end()
 
+    # TODO: disable debug so program doesn't run twice on initialization
     app.run(debug=True)

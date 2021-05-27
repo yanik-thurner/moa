@@ -1,20 +1,25 @@
 import numpy as np
 import pandas as pd
 import itertools
-from matplotlib import pyplot as plt  # TODO: Remove
-import time
 
+# TODO: remove for submission
+from util import Task
+import debug
+
+"""
+The minimum ranking (ranging from 0 to 100) to be considered a valid tag for a show.
+"""
 MIN_TAG_RANKING = 20
 
+"""
+Used for logarithmic scaling when calculating the distances.
 
-class Task:
-    def __init__(self, task_name):
-        self.name = task_name
-        self.start_time = time.time()
-        print(f'--- STARTING: {task_name} ---')
-
-    def end(self):
-        print(f'--- FINISHING:  {self.name} in {"{:.3f}".format(time.time() - self.start_time)}s')
+According to the paper:
+[...] sigma is a small, positive, constant scaling value, currently set to
+0.1, used to ensure a non-zero value inside the logarithm in the case
+that two terms have a pairwise similarity of 0.
+"""
+SIGMA = 0.1
 
 
 class FilterableData:
@@ -56,37 +61,54 @@ def preprocess(raw_data: pd.DataFrame) -> FilterableData:
 def process(preprocessed_data, available_filter, selected_filter):
     all_tags = np.array(sorted(set(preprocessed_data.tags.explode().drop_duplicates().dropna())))
 
-    t = Task('Calculating Similarity Matrix')
-    similarity_matrix = jaccard_matrix(all_tags, preprocessed_data.tags)
+    t = Task('Calculating Similarities')
+    pairwise_similarities = jaccard_matrix(all_tags, preprocessed_data.tags)
+    filtered_similarities = filter_similarities(pairwise_similarities)
+    debug._plot_matrix(filtered_similarities)
+    debug._filter_tag_pairs_by_similarity(pairwise_similarities, all_tags, 0.15)
+    t.end()
+
+    t = Task('Calculating Distances')
+    distances = calculate_distances(filtered_similarities)
+    debug._plot_matrix(distances)
     t.end()
 
 
 def jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
     m = np.empty((len(all_tags), len(all_tags)))
-    all_occurences = dict(tags_column.explode().value_counts())
-    co_occureces = np.empty((len(all_tags), len(all_tags)))
+    all_occurrences = dict(tags_column.explode().value_counts())
+    co_occurrences = np.empty((len(all_tags), len(all_tags)))
     tag_ids = {tag: i for i, tag in enumerate(all_tags)}
 
     # calculate co occurences
     for tags in tags_column:
         for i in range(len(tags)):
             for j in range(i, len(tags)):
-                co_occureces[tag_ids[tags[i]], tag_ids[tags[j]]] += 1
-
-    co_occureces = co_occureces.T + co_occureces
-    np.fill_diagonal(co_occureces, 0)
+                co_occurrences[tag_ids[tags[i]], tag_ids[tags[j]]] += 1
+    co_occurrences = co_occurrences.T + co_occurrences
+    np.fill_diagonal(co_occurrences, 0)
 
     # calculate jaccard matrix
     for i, tagI in enumerate(all_tags):
         for j, tagJ in enumerate(all_tags):
-            union = (all_occurences[tagI] + all_occurences[tagJ]) - co_occureces[i, j]
-            m[i, j] = co_occureces[i, j] / union
+            union = (all_occurrences[tagI] + all_occurrences[tagJ]) - co_occurrences[i, j]
+            m[i, j] = co_occurrences[i, j] / union
 
     return m
 
 
-def calculate_distances():
-    pass
+def filter_similarities(pairwise_similarities: np.ndarray):
+    # Maybe not needed since we already have very few terms compared to the original paper
+    return pairwise_similarities  # TODO: implement filter if needed
+
+
+def _logarithmic_scaling(x):
+    global SIGMA
+    return -np.log((1 - SIGMA) * x + SIGMA)
+
+
+def calculate_distances(filtered_similarities: np.ndarray):
+    return _logarithmic_scaling(filtered_similarities)
 
 
 def cluster_tags():
