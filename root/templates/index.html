@@ -53,9 +53,9 @@
         <tr>
             <td><label>Studios: </label></td>
             <td><select class="js-example-basic-multiple" name="studios[]" multiple="multiple">
-                <option value="-1" {% if -1 in selected_filter.studios %} selected="true" {% endif %}>All</option>
+                <option value="All" {% if "All" in selected_filter.studios %} selected="true" {% endif %}>All</option>
                 {%  for studio in available_filter.studios %}
-                    <option value="{{ loop.index }}" {% if loop.index in selected_filter.studios %} selected="true" {% endif %}> {{ studio }}</option>
+                    <option value="{{ studio }}" {% if studio in selected_filter.studios %} selected="true" {% endif %}> {{ studio }}</option>
                 {% endfor %}
             </select></td>
         </tr>
@@ -70,9 +70,9 @@
         <tr>
             <td><label>Media Type: </label></td>
             <td><select class="js-example-basic-multiple" name="media_types[]" multiple="multiple">
-                <option value="-1" {% if -1 in selected_filter.media_types %} selected="true" {% endif %}>All</option>
+                <option value="All" {% if "All" in selected_filter.media_types %} selected="true" {% endif %}>All</option>
                 {%  for media_type in available_filter.media_types %}
-                    <option value="{{ loop.index }}" {% if loop.index in selected_filter.media_types %} selected="true" {% endif %}> {{ media_type }}</option>
+                    <option value="{{ media_type }}" {% if media_type in selected_filter.media_types %} selected="true" {% endif %}> {{ media_type }}</option>
                 {% endfor %}
             </select></td>
         </tr>

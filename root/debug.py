@@ -7,12 +7,17 @@ final submission.
 """
 
 
-def _plot_matrix(matrix: np.ndarray):
+def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     cax = ax.matshow(matrix, interpolation='nearest')
     fig.colorbar(cax)
 
+    ax.set_xticks(np.arange(len(tags.tolist())))
+    ax.set_yticks(np.arange(len(tags.tolist())))
+    ax.set_xticklabels(tags.tolist())
+    ax.set_yticklabels(tags.tolist())
+    plt.xticks(rotation=90)
     plt.show()
 
 
@@ -26,3 +31,7 @@ def _filter_tag_pairs_by_similarity(pairwise_similarities: np.ndarray, all_tags:
 
     for pair in pairs:
         print(f'{pair[0]} & {pair[1]} ')
+
+
+def _print_stats(processed_data):
+    pass

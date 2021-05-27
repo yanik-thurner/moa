@@ -23,22 +23,18 @@ SIGMA = 0.1
 
 
 class FilterableData:
-    def __init__(self):
-        self.studios = None
-        self.release_year_range = None
-        self.media_types = None
+    def __init__(self, preprocessed_data: pd.DataFrame = None):
+        if preprocessed_data is not None:
+            self.studios = sorted(set(itertools.chain.from_iterable(preprocessed_data.studios)))
+            self.release_year_range = (preprocessed_data.seasonYear.min(), preprocessed_data.seasonYear.max())
+            self.media_types = sorted(filter(None, set(preprocessed_data.media_type)))  # TODO: maybe handle None values instead of filter
+        else:
+            self.studios = None
+            self.release_year_range = None
+            self.media_types = None
 
 
-def wrap(preprocessed_data: pd.DataFrame) -> FilterableData:
-    # wrap it into AnilistData object
-    data = FilterableData()
-    data.studios = sorted(set(itertools.chain.from_iterable(preprocessed_data.studios)))
-    data.release_year_range = (preprocessed_data.seasonYear.min(), preprocessed_data.seasonYear.max())
-    data.media_types = sorted(filter(None, set(preprocessed_data.format)))  # TODO: maybe handle None values instead of filter
-    return data
-
-
-def preprocess(raw_data: pd.DataFrame) -> FilterableData:
+def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterableData):
     # transpose so columns are attributes and rows are anime ids
     df = raw_data.transpose(copy=True)
 
@@ -55,26 +51,45 @@ def preprocess(raw_data: pd.DataFrame) -> FilterableData:
 
     # keep only relevant columns, drop everything else
     df = df.filter(['tags', 'title', 'studios', 'format', 'seasonYear'])  # TODO: Add new columns for filtering here
-    return df, wrap(preprocessed_data=df)
+
+    # rename to be consistent lol
+    df.rename(columns={'format': 'media_type'}, inplace=True)
+    return df, FilterableData(df)
 
 
-def process(preprocessed_data, available_filter, selected_filter):
-    all_tags = np.array(sorted(set(preprocessed_data.tags.explode().drop_duplicates().dropna())))
+def process(preprocessed_data: pd.DataFrame, selected_filter: FilterableData):
+    t = Task('Filter Data')
+    filtered_data = _filter(preprocessed_data, selected_filter)
+    t.end()
+
+    all_tags = np.array(sorted(set(filtered_data.tags.explode().drop_duplicates().dropna())))
 
     t = Task('Calculating Similarities')
-    pairwise_similarities = jaccard_matrix(all_tags, preprocessed_data.tags)
-    filtered_similarities = filter_similarities(pairwise_similarities)
-    debug._plot_matrix(filtered_similarities)
+    pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
+    filtered_similarities = _filter_similarities(pairwise_similarities)
+    debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
     debug._filter_tag_pairs_by_similarity(pairwise_similarities, all_tags, 0.15)
     t.end()
 
     t = Task('Calculating Distances')
-    distances = calculate_distances(filtered_similarities)
-    debug._plot_matrix(distances)
+    distances = _calculate_distances(filtered_similarities)
+    debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
 
 
-def jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
+def _filter(preprocessed_data: pd.DataFrame, selected_filter: FilterableData):
+    filtered_data = preprocessed_data.copy()  # TODO: Maybe no copy?
+    if "All" not in selected_filter.studios:
+        mask = filtered_data.studios.apply(lambda x: any(studio for studio in selected_filter.studios if studio in x))
+        filtered_data = filtered_data[mask]
+
+    if "All" not in selected_filter.media_types:
+        filtered_data = filtered_data[filtered_data['media_type'].isin(selected_filter.media_types)]
+
+    return filtered_data
+
+
+def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
     m = np.empty((len(all_tags), len(all_tags)))
     all_occurrences = dict(tags_column.explode().value_counts())
     co_occurrences = np.empty((len(all_tags), len(all_tags)))
@@ -97,7 +112,7 @@ def jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
     return m
 
 
-def filter_similarities(pairwise_similarities: np.ndarray):
+def _filter_similarities(pairwise_similarities: np.ndarray):
     # Maybe not needed since we already have very few terms compared to the original paper
     return pairwise_similarities  # TODO: implement filter if needed
 
@@ -107,9 +122,9 @@ def _logarithmic_scaling(x):
     return -np.log((1 - SIGMA) * x + SIGMA)
 
 
-def calculate_distances(filtered_similarities: np.ndarray):
+def _calculate_distances(filtered_similarities: np.ndarray):
     return _logarithmic_scaling(filtered_similarities)
 
 
-def cluster_tags():
+def _cluster_tags():
     pass
