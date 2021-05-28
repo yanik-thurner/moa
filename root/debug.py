@@ -24,6 +24,7 @@ def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list, LIMIT:int or Non
     plt.xticks(rotation=90)
     plt.show()
 
+    print(matrix)
 
 def _filter_tag_pairs_by_similarity(pairwise_similarities: np.ndarray, all_tags: np.ndarray, min_similarity: float):
     x = np.argwhere(pairwise_similarities >= min_similarity)
