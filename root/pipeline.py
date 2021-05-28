@@ -65,16 +65,13 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
 
     t = Task('Calculating Similarities')
     pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
-    print(pairwise_similarities)
     filtered_similarities = _filter_similarities(pairwise_similarities)
-    print(filtered_similarities)
-    debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
+    #debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
     #debug._filter_tag_pairs_by_similarity(pairwise_similarities, all_tags, 0.15)
     t.end()
 
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
-    print(distances)
     debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
 

@@ -1,5 +1,6 @@
 import time
 
+
 class Task:
     """
     A helper class to measure execution time of certain tasks.
