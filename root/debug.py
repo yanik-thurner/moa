@@ -7,7 +7,7 @@ final submission.
 """
 
 
-def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list, LIMIT:int or None =8):
+def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list, LIMIT:int or None=20):
     if LIMIT and matrix.shape[0] > LIMIT:
         print(f'Exceeded size limit for printing: {matrix.shape[0]} > {LIMIT}')
         return

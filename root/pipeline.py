@@ -11,6 +11,7 @@ The minimum ranking (ranging from 0 to 100) to be considered a valid tag for a s
 """
 MIN_TAG_RANKING = 20
 
+
 """
 Used for logarithmic scaling when calculating the distances.
 
@@ -56,14 +57,18 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     filters.filter(filtered_data)
     t.end()
 
-    all_tags = np.array(sorted(set(filtered_data.tags.explode().drop_duplicates().dropna())))
+    # Sort tags by number of occurrences emulate the papers sort by term weight
+    all_occurrences = dict(filtered_data.tags.explode().value_counts())
+    all_tags = np.array(sorted(set(filtered_data.tags.explode().drop_duplicates().dropna()),
+                key=lambda x: all_occurrences[x],
+                reverse=True))
 
     t = Task('Calculating Similarities')
     pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
     print(pairwise_similarities)
     filtered_similarities = _filter_similarities(pairwise_similarities)
     print(filtered_similarities)
-    #debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
+    debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
     #debug._filter_tag_pairs_by_similarity(pairwise_similarities, all_tags, 0.15)
     t.end()
 
@@ -86,6 +91,7 @@ def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
             for j in range(i, len(tags)):
                 co_occurrences[tag_ids[tags[i]], tag_ids[tags[j]]] += 1
     co_occurrences = co_occurrences.T + co_occurrences
+    #co_occurrences[np.diag_indices_from(co_occurrences)] /= 2
     np.fill_diagonal(co_occurrences, 0)
 
     # calculate jaccard matrix
@@ -98,7 +104,8 @@ def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
 
 
 def _filter_similarities(pairwise_similarities: np.ndarray):
-    #pairwise_similarities = np.delete(np.where())
+    # Filtering maybe isn't needed, since we only got relatively few, but high quality, terms compared to the original paper
+    # TODO: Maybe implement implement filter top K terms or remove tags with less than x occurrences here
     return pairwise_similarities
 
 
