@@ -7,7 +7,11 @@ final submission.
 """
 
 
-def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list):
+def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list, LIMIT:int or None =8):
+    if LIMIT and matrix.shape[0] > LIMIT:
+        print(f'Exceeded size limit for printing: {matrix.shape[0]} > {LIMIT}')
+        return
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
     cax = ax.matshow(matrix, interpolation='nearest')

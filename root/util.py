@@ -11,3 +11,4 @@ class Task:
 
     def end(self):
         print(f'--- FINISHING:  {self.name} in {"{:.3f}".format(time.time() - self.start_time)}s')
+

@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
-import itertools
 
 # TODO: remove for submission
 from util import Task
+from filter import FilterList
 import debug
 
 """
@@ -22,44 +22,38 @@ that two terms have a pairwise similarity of 0.
 SIGMA = 0.1
 
 
-class FilterableData:
-    def __init__(self, preprocessed_data: pd.DataFrame = None):
-        if preprocessed_data is not None:
-            self.studios = sorted(set(itertools.chain.from_iterable(preprocessed_data.studios)))
-            self.release_year_range = (preprocessed_data.seasonYear.min(), preprocessed_data.seasonYear.max())
-            self.media_types = sorted(filter(None, set(preprocessed_data.media_type)))  # TODO: maybe handle None values instead of filter
-        else:
-            self.studios = None
-            self.release_year_range = None
-            self.media_types = None
+def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
+    filters = FilterList()
 
-
-def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterableData):
     # transpose so columns are attributes and rows are anime ids
     df = raw_data.transpose(copy=True)
 
     # remove id col since it is already the index
     df = df.drop('id', axis=1)
 
-    # extract studio names from list
-    df.studios = df.studios.apply(lambda studio: sorted([node['name'] for node in studio['nodes']
-                                                  if node['isAnimationStudio']
-                                                  or not node['isAnimationStudio']]))  # TODO: Maybe remove or
+    # call preprocessing function of all filters
+    filters.preprocess(df)
 
     # transform tag map to only list of names, remove low ranked and NSFW tags
     df.tags = df.tags.apply(lambda tags: sorted([tag['name'] for tag in tags if tag['rank'] >= MIN_TAG_RANKING and not tag['isAdult']]))
 
+    # Remove Tagless
+    df = df[df['tags'].str.len() != 0]
+
     # keep only relevant columns, drop everything else
-    df = df.filter(['tags', 'title', 'studios', 'format', 'seasonYear'])  # TODO: Add new columns for filtering here
+    columns = ['tags', 'title'] + filters.column_name
+    df = df.filter(columns)
 
-    # rename to be consistent lol
-    df.rename(columns={'format': 'media_type'}, inplace=True)
-    return df, FilterableData(df)
+    # initialize filtering dta
+    filters.initialize_data(df)
+
+    return df, filters
 
 
-def process(preprocessed_data: pd.DataFrame, selected_filter: FilterableData):
+def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     t = Task('Filter Data')
-    filtered_data = _filter(preprocessed_data, selected_filter)
+    filtered_data = preprocessed_data.copy()
+    filters.filter(filtered_data)
     t.end()
 
     all_tags = np.array(sorted(set(filtered_data.tags.explode().drop_duplicates().dropna())))
@@ -67,26 +61,14 @@ def process(preprocessed_data: pd.DataFrame, selected_filter: FilterableData):
     t = Task('Calculating Similarities')
     pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
     filtered_similarities = _filter_similarities(pairwise_similarities)
-    debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
-    debug._filter_tag_pairs_by_similarity(pairwise_similarities, all_tags, 0.15)
+    #debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
+    #debug._filter_tag_pairs_by_similarity(pairwise_similarities, all_tags, 0.15)
     t.end()
 
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
     debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
-
-
-def _filter(preprocessed_data: pd.DataFrame, selected_filter: FilterableData):
-    filtered_data = preprocessed_data.copy()  # TODO: Maybe no copy?
-    if "All" not in selected_filter.studios:
-        mask = filtered_data.studios.apply(lambda x: any(studio for studio in selected_filter.studios if studio in x))
-        filtered_data = filtered_data[mask]
-
-    if "All" not in selected_filter.media_types:
-        filtered_data = filtered_data[filtered_data['media_type'].isin(selected_filter.media_types)]
-
-    return filtered_data
 
 
 def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
@@ -113,8 +95,8 @@ def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
 
 
 def _filter_similarities(pairwise_similarities: np.ndarray):
-    # Maybe not needed since we already have very few terms compared to the original paper
-    return pairwise_similarities  # TODO: implement filter if needed
+    #pairwise_similarities = np.delete(np.where())
+    return pairwise_similarities
 
 
 def _logarithmic_scaling(x):

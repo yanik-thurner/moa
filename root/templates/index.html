@@ -15,17 +15,17 @@
         $(function () {
             $("#slider-range").slider({
                 range: true,
-                min: {{available_filter.release_year_range[0]}},
-                max: {{available_filter.release_year_range[1]}},
-                values: [{{selected_filter.release_year_range[0]}}, {{selected_filter.release_year_range[1]}}],
+                min: {{filters['seasonYear'].available_values[0]}},
+                max: {{filters['seasonYear'].available_values[-1]}},
+                values: [{{filters['seasonYear'].available_values[0]}}, {{filters['seasonYear'].available_values[-1]}}],
 
                 slide: function (event, ui) {
-                    $("#release_year_min").val(ui.values[0] );
-                    $("#release_year_max").val(ui.values[1] );
+                    $("#seasonYear_min").val(ui.values[0] );
+                    $("#seasonYear_max").val(ui.values[1] );
                 }
             });
-            $("#release_year_min").val($("#slider-range").slider("values", 0));
-            $("#release_year_max").val($("#slider-range").slider("values", 1));
+            $("#seasonYear_min").val($("#slider-range").slider("values", 0));
+            $("#seasonYear_max").val($("#slider-range").slider("values", 1));
         });
     </script>
 
@@ -53,26 +53,26 @@
         <tr>
             <td><label>Studios: </label></td>
             <td><select class="js-example-basic-multiple" name="studios[]" multiple="multiple">
-                <option value="All" {% if "All" in selected_filter.studios %} selected="true" {% endif %}>All</option>
-                {%  for studio in available_filter.studios %}
-                    <option value="{{ studio }}" {% if studio in selected_filter.studios %} selected="true" {% endif %}> {{ studio }}</option>
+                <option value="All" {% if "All" in filters['studios'].selected_values %} selected="true" {% endif %}>All</option>
+                {%  for studio in filters['studios'].available_values  %}
+                    <option value="{{ studio }}" {% if studio in filters['studios'].selected_values  %} selected="true" {% endif %}> {{ studio }}</option>
                 {% endfor %}
             </select></td>
         </tr>
         <tr>
             <td><label>Release Year: </label></td>
             <td>
-                <input type="text" id="release_year_min" name="release_year_min" readonly style="width: 40px; border:0;  font-weight:bold;"> - <input type="text" id="release_year_max" name="release_year_max" readonly style="width: 40px; border:0;  font-weight:bold;">
+                <input type="text" id="seasonYear_min" name="seasonYear_min" readonly style="width: 40px; border:0;  font-weight:bold;"> - <input type="text" id="seasonYear_max" name="seasonYear_max" readonly style="width: 40px; border:0;  font-weight:bold;">
                 <div id="slider-range"></div>
             </td>
 
         </tr>
         <tr>
             <td><label>Media Type: </label></td>
-            <td><select class="js-example-basic-multiple" name="media_types[]" multiple="multiple">
-                <option value="All" {% if "All" in selected_filter.media_types %} selected="true" {% endif %}>All</option>
-                {%  for media_type in available_filter.media_types %}
-                    <option value="{{ media_type }}" {% if media_type in selected_filter.media_types %} selected="true" {% endif %}> {{ media_type }}</option>
+            <td><select class="js-example-basic-multiple" name="format[]" multiple="multiple">
+                <option value="All" {% if "All" in filters['format'].selected_values  %} selected="true" {% endif %}>All</option>
+                {%  for format in filters['format'].available_values  %}
+                    <option value="{{ format }}" {% if format in filters['format'].selected_values  %} selected="true" {% endif %}> {{ format }}</option>
                 {% endfor %}
             </select></td>
         </tr>
