@@ -83,7 +83,7 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
     #return new_distances.tolist()
-    return (new_distances / np.max(np.abs(new_distances))).tolist()
+    return (new_distances / np.max(np.abs(new_distances))).tolist(), all_tags.tolist()
 
 
 def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):

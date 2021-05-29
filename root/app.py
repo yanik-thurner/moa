@@ -17,10 +17,10 @@ def index():
     filters.refresh_selection()
 
     t = pipeline.Task('Processing Pipeline')
-    map_data = pipeline.process(preprocessed_data, filters)
+    map_data, tags = pipeline.process(preprocessed_data, filters)
     t.end()
 
-    return render_template("index.html", filters=filters, map_data=map_data)
+    return render_template("index.html", filters=filters, map_data=map_data, tags=tags)
 
 
 if __name__ == "__main__":
