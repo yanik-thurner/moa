@@ -111,14 +111,14 @@
         return "M" + d.join("L") + "Z";
     }
 
-    g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 3)
+    g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3)
     //.attr("transform", function(d) { return "translate(" + d + ")"; })
      .attr("cx", function(d) { return d[0]; } )
      .attr("cy", function(d) { return d[1]; } );
 
     svg.call(d3.zoom()
       .extent([[0, 0], [width, height]])
-      .scaleExtent([1, 8])
+      .scaleExtent([1, 80])
       .on("zoom", zoomed));
 
     function zoomed({transform}) {

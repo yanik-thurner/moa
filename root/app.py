@@ -10,6 +10,7 @@ app = Flask(__name__)
 filters: FilterList = None
 CACHE_LOCATION = '../cached_data.pkl'
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     global filters
@@ -40,4 +41,4 @@ if __name__ == "__main__":
     t.end()
 
     # TODO: disable debug so program doesn't run twice on initialization
-    app.run(debug=False)
+    app.run(debug=True)

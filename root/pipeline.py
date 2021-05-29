@@ -1,12 +1,14 @@
 import numpy as np
 import pandas as pd
-
-# TODO: remove for submission
-from util import Task
-from filter import FilterList
-import debug
+import sklearn.metrics.pairwise
 from sklearn.manifold import TSNE
 from sklearn.manifold import MDS
+from filter import FilterList
+from util import Task, PointType
+
+# TODO: remove for submission
+import debug
+from matplotlib import pyplot as plt
 
 """
 The minimum ranking (ranging from 0 to 100) to be considered a valid tag for a show.
@@ -75,15 +77,69 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
     tsne = TSNE(random_state=1, n_iter=15000)
-    new_distances = tsne.fit_transform(distances)
+    positions: np.ndarray = tsne.fit_transform(distances)
     #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1)
     #new_distances = mds.fit_transform(distances)
 
-    debug._plot_scatter(new_distances, all_tags)
-    debug._plot_tag_similarity_matrix(distances, all_tags)
+    #debug._plot_scatter(positions, all_tags)
+    #debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
     #return new_distances.tolist()
-    return (new_distances / np.max(np.abs(new_distances))).tolist()
+
+    # add point type column
+    positions = np.hstack((positions, np.full((positions.shape[0], 1), PointType.DATA.value)))
+    positions = _add_random_border(positions)
+    positions = _add_boxes(positions)
+    plt.scatter(positions[:,0], positions[:,1])
+    plt.show()
+    return (positions / np.max(np.abs(positions))).tolist()
+
+
+def _generate_box(x_center, y_center, width, height, point_distance):
+    x1 = x_center - width/2
+    x2 = x_center + width/2
+    y1 = y_center - height/2
+    y2 = y_center + height/2
+    numx = int((x2 - x1) / point_distance) + 1
+    numy = int((y2 - y1) / point_distance) + 1
+    x = np.reshape(np.linspace(x1, x2, num=numx), (numx,1))
+    y = np.reshape(np.linspace(y1, y2, num=numy), (numy,1))
+    top = np.hstack((x, np.full((numx, 1), y1)))
+    bottom = np.hstack((x, np.full((numx, 1), y2)))
+    left = np.hstack((np.full((numy, 1), x1), y))
+    right = np.hstack((np.full((numy, 1), x2), y))
+    box = np.vstack((top, bottom, left, right))
+    return box
+
+
+def _add_boxes(positions: np.ndarray):
+    _generate_box(0, 0, 1, 1, 0.1)
+    for i, point in enumerate(positions):
+        if point[2] == PointType.DATA.value:
+            box = _generate_box(point[0], point[1], 1, 0.5, 0.05)
+            box = np.hstack((box, np.full((box.shape[0], 1), i)))
+            positions = np.vstack((positions, box))
+
+    return positions
+
+
+def _add_random_border(positions: np.ndarray):
+    NUM_RANDOM_SAMPLES = 1000
+    BORDER_SIZE = 1.5
+    BORDER_DISTANCE = 2.5
+
+    random_sample_x = np.random.uniform(positions[:,0].min() * BORDER_SIZE,
+                                        positions[:,0].max() * BORDER_SIZE,
+                                        (NUM_RANDOM_SAMPLES,1))
+    random_sample_y = np.random.uniform(positions[:,1].min() * BORDER_SIZE,
+                                        positions[:,1].max() * BORDER_SIZE,
+                                        (NUM_RANDOM_SAMPLES,1))
+    random_sample = np.hstack((random_sample_x, random_sample_y, np.full((random_sample_x.shape[0], 1), PointType.BORDER.value)))
+
+    distances_to_data = sklearn.metrics.pairwise.euclidean_distances(random_sample, positions)
+    mask = distances_to_data.min(1) > BORDER_DISTANCE
+    positions = np.vstack((positions, random_sample[mask,]))
+    return positions
 
 
 def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):

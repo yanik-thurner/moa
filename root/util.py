@@ -1,4 +1,10 @@
 import time
+from enum import Enum
+
+
+class PointType(Enum):
+    DATA = -1
+    BORDER = -2
 
 
 class Task:
