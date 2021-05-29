@@ -89,10 +89,12 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     # add point type column
     positions = np.hstack((positions, np.full((positions.shape[0], 1), PointType.DATA.value)))
     positions = _add_random_border(positions)
-    positions = _add_boxes(positions)
+    #positions = _add_boxes(positions)
     plt.scatter(positions[:,0], positions[:,1])
     plt.show()
-    return (positions / np.max(np.abs(positions))).tolist()
+
+    positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
+    return positions.tolist()
 
 
 def _generate_box(x_center, y_center, width, height, point_distance):

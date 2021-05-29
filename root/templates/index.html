@@ -100,15 +100,22 @@
 
     const delaunay = d3.Delaunay.from(data);
     const voronoi = delaunay.voronoi([0, 0, width, height]);
+    const cells = data.map((d, i) => [d, voronoi.cellPolygon(i)]);
 
-    path.data( voronoi.cellPolygons()  ).enter().append("path")
+    path.data( cells  ).enter().append("path")
     .attr("stroke","white")
     .attr("fill", function(d,i) {return c10[i % 10]} )
     //    .attr("d", function(d) { return "M" + d.join("L") + "Z" } );
+    //.attr("g", function(d) { console.log(d);})
     .attr("d", polygon);
 
-    function polygon(d) {
-        return "M" + d.join("L") + "Z";
+    function polygon(b) {
+        //console.log(b)
+        d = b[1]
+        if (b[0][2] !== -1)
+            return null;
+        else
+            return "M" + d.join("L") + "Z";
     }
 
     g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3)
