@@ -4,10 +4,11 @@ from flask import Flask, render_template, request
 import pandas as pd
 import pipeline
 from filter import FilterList
+import os
 
 app = Flask(__name__)
 filters: FilterList = None
-
+CACHE_LOCATION = '../cached_data.pkl'
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -25,7 +26,13 @@ def index():
 if __name__ == "__main__":
 
     t = pipeline.Task('Reading JSON file')
-    raw_data = pd.read_json('../anilist.json')
+    if os.path.exists(CACHE_LOCATION):
+        raw_data = pd.read_pickle(CACHE_LOCATION)
+    else:
+        raw_data = pd.read_json('../anilist.json')
+        print('Caching json file in pkl for faster loading speed')
+        raw_data.to_pickle(CACHE_LOCATION)
+
     t.end()
 
     t = pipeline.Task('Preprocessing Data')

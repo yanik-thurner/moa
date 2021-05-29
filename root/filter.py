@@ -150,7 +150,6 @@ class MediaTypeFilter(Filter):
             mask = data[self.column_name].isin(self.selected_values)
             data.drop(data[~mask].index, inplace=True)
 
-
     @property
     def column_name(self):
         return 'format'

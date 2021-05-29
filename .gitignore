@@ -3,7 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=flask,python,pycharm+all,vscode
 
 ### Custom ###
-
+*.pkl
 
 ### Flask ###
 instance/*
