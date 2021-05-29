@@ -5,6 +5,7 @@ import pandas as pd
 from util import Task
 from filter import FilterList
 import debug
+from sklearn.manifold import TSNE
 
 """
 The minimum ranking (ranging from 0 to 100) to be considered a valid tag for a show.
@@ -72,6 +73,9 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
 
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
+    tsne = TSNE(random_state=1, n_iter=15000)
+    new_distances = tsne.fit_transform(distances)
+    debug._plot_scatter(new_distances, all_tags)
     debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
 

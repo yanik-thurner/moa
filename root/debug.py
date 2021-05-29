@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from typing import Optional
 import numpy as np
 
 """
@@ -7,7 +8,7 @@ final submission.
 """
 
 
-def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list, LIMIT:int or None=20):
+def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list, LIMIT:Optional[int]=20):
     if LIMIT and matrix.shape[0] > LIMIT:
         print(f'Exceeded size limit for printing: {matrix.shape[0]} > {LIMIT}')
         return
@@ -25,6 +26,18 @@ def _plot_tag_similarity_matrix(matrix: np.ndarray, tags: list, LIMIT:int or Non
     plt.show()
 
     print(matrix)
+
+
+def _plot_scatter(matrix: np.ndarray, tags: list, LIMIT:Optional[int]=20):
+    cmaplist = plt.cm.nipy_spectral(np.linspace(0, 1, LIMIT))
+    fig = plt.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    for i in range(len(tags)):
+        if i >= LIMIT:
+            break
+        plt.scatter(matrix[i,0], matrix[i, 1], alpha=1, label=tags[i], color=cmaplist[i])
+    plt.legend(bbox_to_anchor=(1.00, 1.15), loc='upper left')
+    plt.show()
 
 
 def _filter_tag_pairs_by_similarity(pairwise_similarities: np.ndarray, all_tags: np.ndarray, min_similarity: float):
