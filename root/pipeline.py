@@ -94,7 +94,7 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     plt.show()
 
     positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
-    return positions.tolist()
+    return positions.tolist(), all_tags.tolist()
 
 
 def _generate_box(x_center, y_center, width, height, point_distance):
