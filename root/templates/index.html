@@ -158,7 +158,7 @@
         });
 
 
-    g.call(d3.zoom()
+    svg.call(d3.zoom()
         .extent([[0, 0], [width, height]])
         .scaleExtent([1, 16])
         .on("zoom", zoomed));
