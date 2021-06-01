@@ -76,10 +76,14 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
 
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
-    tsne = TSNE(random_state=1, n_iter=15000)
-    positions: np.ndarray = tsne.fit_transform(distances)
-    #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1)
-    #new_distances = mds.fit_transform(distances)
+    if distances.shape[0] != 1:
+        tsne = TSNE(random_state=1, n_iter=15000)
+        positions: np.ndarray = tsne.fit_transform(distances)
+        #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1)
+        #positions = mds.fit_transform(distances)
+
+    else:
+        positions = np.array([[0, 0]])
 
     #debug._plot_scatter(positions, all_tags)
     #debug._plot_tag_similarity_matrix(distances, all_tags)
@@ -126,28 +130,34 @@ def _add_boxes(positions: np.ndarray):
 
 
 def _add_random_border(positions: np.ndarray):
-    NUM_RANDOM_SAMPLES_PER_CELL = 3
+    NUM_RANDOM_SAMPLES_PER_CELL = 10
     BORDER_SIZE_PERCENT = 0.15
-    BORDER_DISTANCE_PERCENT = 0.20
+    BORDER_DISTANCE_PERCENT = 0.10
     CELL_SICE_PERCENT = 0.04
     grid_corners = [positions[:, 0].min(),
                    positions[:, 1].min(),
                    positions[:, 0].max(),
                    positions[:, 1].max()]
 
-    border_distance = max(grid_corners[2] - grid_corners[0], grid_corners[3] - grid_corners[1])
-    border_distance = border_distance * BORDER_DISTANCE_PERCENT
-
     # Extend grid corners by border distance and border size
-    dx = grid_corners[2] - grid_corners[0]
-    dy = grid_corners[3] - grid_corners[1]
-    grid_corners[0] = (grid_corners[0] - dx * BORDER_SIZE_PERCENT - dx * BORDER_SIZE_PERCENT)
-    grid_corners[1] = (grid_corners[1] - dy * BORDER_SIZE_PERCENT - dy * BORDER_SIZE_PERCENT)
-    grid_corners[2] = (grid_corners[2] + dx * BORDER_SIZE_PERCENT + dx * BORDER_SIZE_PERCENT)
-    grid_corners[3] = (grid_corners[3] + dy * BORDER_SIZE_PERCENT + dy * BORDER_SIZE_PERCENT)
+    dx_data = abs(grid_corners[2] - grid_corners[0])
+    dy_data = abs(grid_corners[3] - grid_corners[1])
+    dx_data = dx_data if dx_data != 0 else dy_data
+    dy_data = dy_data if dy_data != 0 else dx_data
+    if dx_data == 0 and dy_data == 0:
+        dx_data, dy_data = 1, 1
 
-    num_cells_x = int((grid_corners[2] - grid_corners[0]) / ((grid_corners[2] - grid_corners[0]) * CELL_SICE_PERCENT))
-    num_cells_y = int((grid_corners[3] - grid_corners[1]) / ((grid_corners[3] - grid_corners[1]) * CELL_SICE_PERCENT))
+    border_distance = max(dx_data, dy_data) * BORDER_DISTANCE_PERCENT
+    grid_corners[0] -= dx_data * BORDER_DISTANCE_PERCENT + dx_data * BORDER_SIZE_PERCENT
+    grid_corners[1] -= dy_data * BORDER_DISTANCE_PERCENT + dy_data * BORDER_SIZE_PERCENT
+    grid_corners[2] += dx_data * BORDER_DISTANCE_PERCENT + dx_data * BORDER_SIZE_PERCENT
+    grid_corners[3] += dy_data * BORDER_DISTANCE_PERCENT + dy_data * BORDER_SIZE_PERCENT
+
+    dx_grid = abs(grid_corners[2] - grid_corners[0])
+    dy_grid = abs(grid_corners[3] - grid_corners[1])
+
+    num_cells_x = int(dx_grid / (dx_grid * CELL_SICE_PERCENT))
+    num_cells_y = int(dy_grid / (dy_grid * CELL_SICE_PERCENT))
 
     cells_borders_x = np.linspace(grid_corners[0], grid_corners[2], num_cells_x + 1)
     cells_borders_y = np.linspace(grid_corners[1], grid_corners[3], num_cells_y + 1)
@@ -162,7 +172,7 @@ def _add_random_border(positions: np.ndarray):
             random_regular_grid_sample = np.vstack((random_regular_grid_sample,new_points))
 
     # filter points that are too close to the actual data
-    distances_to_data = sklearn.metrics.pairwise.euclidean_distances(random_regular_grid_sample, positions)
+    distances_to_data = sklearn.metrics.pairwise.euclidean_distances(random_regular_grid_sample[:,:2], positions[:,:2])
     mask = distances_to_data.min(1) > border_distance
     positions = np.vstack((positions, random_regular_grid_sample[mask,]))
 
