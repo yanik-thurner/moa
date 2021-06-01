@@ -93,7 +93,7 @@
 
 
 <script>
-    var width = 960, height = 500, displayThreshold = 2000;
+    var width = 1000, height = 1000, displayThreshold = 2000;
     var c10 = d3.schemePaired;
     //var vertices = d3.range(10).map(function(d) {
     //  return [Math.random() * width, Math.random() * height];
@@ -104,6 +104,7 @@
         x[1] = (x[1] * height / 2) + height / 2
     })
     //console.log(vertices);
+
     data = vertices;
     orient = ({
         top: text => text.attr("text-anchor", "middle").attr("y", -6),
@@ -164,10 +165,18 @@
     g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3)
         //.attr("transform", function(d) { return "translate(" + d + ")"; })
         .attr("cx", function (d) {
-            return d[0];
+            if (d[2] !== -2 && {{circle | safe}}){
+                return d[0];
+            }
+            else
+                null;
         })
         .attr("cy", function (d) {
-            return d[1];
+            if (d[2] !== -2 && {{circle | safe}}){
+                return d[1];
+            }
+            else
+                null;
         });
 
     //console.log({{ tags | safe  }})
@@ -179,13 +188,17 @@
         .data(cells)
         .join("text")
         .each(function ([[x, y], cell]) {
+            //console.log(cell)
             //console.log(d3.polygonArea(cell));
             cell.scaleThreshold = Math.sqrt(displayThreshold / -d3.polygonArea(cell));
             cell.opacityScale = d3.scaleLinear().domain([cell.scaleThreshold, cell.scaleThreshold * 2]).range([0, 1]);
             //console.log(cell)
         })
         //.attr("transform", ([d]) => `translate(${d.slice(0, -1)})`)
-        .attr("transform", function ([data_point], i) {
+        .attr("transform", function (d, i) {
+            console.log(d)
+            data_point = d[0];
+            cell = d[1];
             const text = ({{ tags | safe  }}[i]);
             if (typeof text !== 'undefined') {
                 let lines = text.split(" ");
@@ -194,14 +207,17 @@
                     let current = BrowserText.getSize(lines[line], font_height, font_family)
                     longest = ((current > longest) ? current : longest);
                 }
-                const position = data_point.slice(0, -1);
+                //const position = data_point.slice(0, -1);
+                var position = d3.polygonCentroid(cell);
                 position[0] -= longest / 2;
                 position[1] -= ((font_height+1)/2) * lines.length;
                 return `translate(${position})`
             }
         })
         //.attr("display", ([, cell]) => -d3.polygonArea(cell) > 2000 ? null : "none")
-        .html(function ([d], i) {
+        .html(function (d, i) {
+            //console.log(d)
+
             const text = {{ tags | safe  }}[i];
             if (typeof text !== 'undefined') {
                 let lines = text.split(" ");

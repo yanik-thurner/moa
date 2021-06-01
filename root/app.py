@@ -9,7 +9,7 @@ import os
 app = Flask(__name__)
 filters: FilterList = None
 CACHE_LOCATION = '../cached_data.pkl'
-
+f = 'false'
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -21,7 +21,7 @@ def index():
     map_data, tags = pipeline.process(preprocessed_data, filters)
     t.end()
 
-    return render_template("index.html", filters=filters, map_data=map_data, tags=tags)
+    return render_template("index.html", filters=filters, map_data=map_data, tags=tags, circle=f)
 
 
 if __name__ == "__main__":
