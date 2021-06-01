@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
 
     <!-- Range Slider -->
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -20,8 +21,8 @@
                 values: [{{filters['seasonYear'].available_values[0]}}, {{filters['seasonYear'].available_values[-1]}}],
 
                 slide: function (event, ui) {
-                    $("#seasonYear_min").val(ui.values[0] );
-                    $("#seasonYear_max").val(ui.values[1] );
+                    $("#seasonYear_min").val(ui.values[0]);
+                    $("#seasonYear_max").val(ui.values[1]);
                 }
             });
             $("#seasonYear_min").val($("#slider-range").slider("values", 0));
@@ -46,23 +47,29 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.jpg') }}">
 </head>
-<body >
+<body>
 <h1>Maps of Anime</h1>
 <form method="post">
     <table id="form">
         <tr>
             <td><label>Studios: </label></td>
             <td><select class="js-example-basic-multiple" name="studios[]" multiple="multiple">
-                <option value="All" {% if "All" in filters['studios'].selected_values %} selected="true" {% endif %}>All</option>
-                {%  for studio in filters['studios'].available_values  %}
-                    <option value="{{ studio }}" {% if studio in filters['studios'].selected_values  %} selected="true" {% endif %}> {{ studio }}</option>
+                <option value="All" {% if "All" in filters['studios'].selected_values %} selected="true" {% endif %}>
+                    All
+                </option>
+                {% for studio in filters['studios'].available_values %}
+                    <option value="{{ studio }}" {% if studio in filters['studios'].selected_values %}
+                            selected="true" {% endif %}> {{ studio }}</option>
                 {% endfor %}
             </select></td>
         </tr>
         <tr>
             <td><label>Release Year: </label></td>
             <td>
-                <input type="text" id="seasonYear_min" name="seasonYear_min" readonly style="width: 40px; border:0;  font-weight:bold;"> - <input type="text" id="seasonYear_max" name="seasonYear_max" readonly style="width: 40px; border:0;  font-weight:bold;">
+                <input type="text" id="seasonYear_min" name="seasonYear_min" readonly
+                       style="width: 40px; border:0;  font-weight:bold;"> - <input type="text" id="seasonYear_max"
+                                                                                   name="seasonYear_max" readonly
+                                                                                   style="width: 40px; border:0;  font-weight:bold;">
                 <div id="slider-range"></div>
             </td>
 
@@ -70,9 +77,12 @@
         <tr>
             <td><label>Media Type: </label></td>
             <td><select class="js-example-basic-multiple" name="format[]" multiple="multiple">
-                <option value="All" {% if "All" in filters['format'].selected_values  %} selected="true" {% endif %}>All</option>
-                {%  for format in filters['format'].available_values  %}
-                    <option value="{{ format }}" {% if format in filters['format'].selected_values  %} selected="true" {% endif %}> {{ format }}</option>
+                <option value="All" {% if "All" in filters['format'].selected_values %} selected="true" {% endif %}>
+                    All
+                </option>
+                {% for format in filters['format'].available_values %}
+                    <option value="{{ format }}" {% if format in filters['format'].selected_values %}
+                            selected="true" {% endif %}> {{ format }}</option>
                 {% endfor %}
             </select></td>
         </tr>
@@ -89,7 +99,10 @@
     //  return [Math.random() * width, Math.random() * height];
     //});
     var vertices = {{ map_data | safe }};
-    vertices.forEach(x => {x[0] = (x[0] * width/2) + width/2; x[1] = (x[1] * height/2) + height/2})
+    vertices.forEach(x => {
+        x[0] = (x[0] * width / 2) + width / 2;
+        x[1] = (x[1] * height / 2) + height / 2
+    })
     //console.log(vertices);
     data = vertices;
     orient = ({
@@ -109,9 +122,11 @@
     const voronoi = delaunay.voronoi([0, 0, width, height]);
     const cells = data.map((d, i) => [d, voronoi.cellPolygon(i)]);
 
-    path.data( cells  ).enter().append("path")
-        .attr("stroke","white")
-        .attr("fill", function(d,i) {return c10[i % 10]} )
+    path.data(cells).enter().append("path")
+        .attr("stroke", "white")
+        .attr("fill", function (d, i) {
+            return c10[i % 10]
+        })
         //    .attr("d", function(d) { return "M" + d.join("L") + "Z" } );
         .attr("d", polygon);
 
@@ -125,33 +140,87 @@
             return "M" + d.join("L") + "Z";
     }
 
+    var BrowserText = (function () {
+        var canvas = document.createElement('canvas'),
+            context = canvas.getContext('2d');
+
+        /**
+         * Measures the rendered width of arbitrary text given the font size and font face
+         * @param {string} text The text to measure
+         * @param {number} fontSize The font size in pixels
+         * @param {string} fontFace The font face ("Arial", "Helvetica", etc.)
+         * @returns {number} The width of the text
+         **/
+        function getSize(text, fontSize, fontFace) {
+            context.font = fontSize + 'px ' + fontFace;
+            return context.measureText(text).width;
+        }
+
+        return {
+            getSize: getSize
+        };
+    })();
+
     g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3)
         //.attr("transform", function(d) { return "translate(" + d + ")"; })
-        .attr("cx", function(d) { return d[0]; } )
-        .attr("cy", function(d) { return d[1]; } );
+        .attr("cx", function (d) {
+            return d[0];
+        })
+        .attr("cy", function (d) {
+            return d[1];
+        });
 
     //console.log({{ tags | safe  }})
+    const font_height = 5;
+    const font_family = "sans-serif";
     g.attr("class", "label")
-        .style("font", "5px sans-serif")
+        .style("font", font_height + "px " + font_family)
         .selectAll("text")
         .data(cells)
         .join("text")
-        .each(function([[x, y], cell]) {
+        .each(function ([[x, y], cell]) {
             //console.log(d3.polygonArea(cell));
-            cell.scaleThreshold = Math.sqrt(displayThreshold / - d3.polygonArea(cell));
+            cell.scaleThreshold = Math.sqrt(displayThreshold / -d3.polygonArea(cell));
             cell.opacityScale = d3.scaleLinear().domain([cell.scaleThreshold, cell.scaleThreshold * 2]).range([0, 1]);
             //console.log(cell)
-            const [cx, cy] = d3.polygonCentroid(cell);
-            const angle = (Math.round(Math.atan2(cy - y, cx - x) / Math.PI * 2) + 4) % 4;
-            d3.select(this).call(angle === 0 ? orient.right
-                : angle === 3 ? orient.top
-                    : angle === 1 ? orient.bottom
-                        : orient.left);
         })
-        .attr("transform", ([d]) => `translate(${d.slice(0, -1)})`)
+        //.attr("transform", ([d]) => `translate(${d.slice(0, -1)})`)
+        .attr("transform", function ([data_point], i) {
+            const text = ({{ tags | safe  }}[i]);
+            if (typeof text !== 'undefined') {
+                let lines = text.split(" ");
+                let longest = 0
+                for (const line in lines) {
+                    let current = BrowserText.getSize(lines[line], font_height, font_family)
+                    longest = ((current > longest) ? current : longest);
+                }
+                const position = data_point.slice(0, -1);
+                position[0] -= longest / 2;
+                position[1] -= ((font_height+1)/2) * lines.length;
+                return `translate(${position})`
+            }
+        })
         //.attr("display", ([, cell]) => -d3.polygonArea(cell) > 2000 ? null : "none")
-        .text((d, i) => {{ tags | safe  }}[i])
-        .attr('opacity', function(d) {
+        .html(function ([d], i) {
+            const text = {{ tags | safe  }}[i];
+            if (typeof text !== 'undefined') {
+                let lines = text.split(" ");
+                let longest = 0
+                for (const line in lines) {
+                    let current = BrowserText.getSize(lines[line], font_height, font_family)
+                    longest = ((current > longest) ? current : longest);
+                }
+                let str = "";
+                for (const line in lines) {
+                    let current = BrowserText.getSize(lines[line], font_height, font_family)
+                    str += `<tspan x='${((longest - current)/2)}px' dy='${font_height}px'> ${lines[line]} </tspan>`;
+                }
+                return str;
+            }
+            else
+                return ""
+        })
+        .attr('opacity', function (d) {
             if (d.scaleThreshold < 1) {
                 return 1;
             }
@@ -173,7 +242,7 @@
 
         d3.selectAll('text')
             //.attr('transform', transform)
-            .attr('opacity', function(d) {
+            .attr('opacity', function (d) {
                 if (transform.k > d[1].scaleThreshold) {
                     return d[1].opacityScale(transform.k);
                 }
@@ -183,9 +252,10 @@
 </script>
 
 
-
 <!-- Bootstrap Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+        crossorigin="anonymous"></script>
 </body>
 
 </html>
