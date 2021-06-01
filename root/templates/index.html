@@ -137,7 +137,7 @@
         .join("text")
         .each(function([[x, y], cell]) {
             //console.log(d3.polygonArea(cell));
-            cell.scaleThreshold = Math.sqrt(displayThreshold / -d3.polygonArea(cell));
+            cell.scaleThreshold = Math.sqrt(displayThreshold / - d3.polygonArea(cell));
             cell.opacityScale = d3.scaleLinear().domain([cell.scaleThreshold, cell.scaleThreshold * 2]).range([0, 1]);
             //console.log(cell)
             const [cx, cy] = d3.polygonCentroid(cell);
