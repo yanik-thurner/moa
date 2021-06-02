@@ -25,7 +25,7 @@ According to the paper:
 0.1, used to ensure a non-zero value inside the logarithm in the case
 that two terms have a pairwise similarity of 0.
 """
-SIGMA = 0.1
+SIGMA = 0.3
 
 
 def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
@@ -81,7 +81,7 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
     if distances.shape[0] != 1:
-        tsne = TSNE(random_state=1, n_iter=15000)
+        tsne = TSNE(random_state=1, n_iter=15000, square_distances=True)
         positions: np.ndarray = tsne.fit_transform(distances)
         #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1, metric=False)
         #positions = mds.fit_transform(distances)
@@ -111,14 +111,17 @@ def _generate_edges(pairwise_similarities: np.ndarray):
     MAX_EDGES = 1
 
     edges = np.ndarray((0,2))
-    for i in range(pairwise_similarities.shape[0] - 1):
-        best_matches_index = pairwise_similarities[i, i:].argsort()[::-1][:MAX_EDGES]
+    for i in range(pairwise_similarities.shape[0]):
+        best_matches_index = pairwise_similarities[i].argsort()[::-1][:MAX_EDGES]
         non_zero = best_matches_index != 0
         best_matches_index = np.array([best_matches_index[non_zero]]).T
         current_edges = np.hstack((np.full((len(best_matches_index), 1), i), best_matches_index))
 
+        # filter self loops
+        current_edges = current_edges[current_edges[:,0] != current_edges[:,1]]
+
         # filter existing
-        if len(edges) > 0:
+        if len(edges) > 0 and len(current_edges) > 0:
             current_edges = current_edges[sklearn.metrics.pairwise.euclidean_distances(current_edges[:, ::-1], edges).min(1) != 0]
 
         edges = np.vstack((edges, current_edges))
