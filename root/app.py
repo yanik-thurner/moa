@@ -41,4 +41,4 @@ if __name__ == "__main__":
     t.end()
 
     # TODO: disable debug so program doesn't run twice on initialization
-    app.run(debug=True)
+    app.run(debug=False, port=5000)

@@ -6,7 +6,7 @@ from sklearn.manifold import MDS
 from filter import FilterList
 from util import Task, PointType
 import networkx as nx
-
+from sklearn.metrics.pairwise import euclidean_distances
 # TODO: remove for submission
 import debug
 from matplotlib import pyplot as plt
@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 The minimum ranking (ranging from 0 to 100) to be considered a valid tag for a show.
 """
 MIN_TAG_RANKING = 20
-
+MIN_TAG_APPEARANCES = 5
 
 """
 Used for logarithmic scaling when calculating the distances.
@@ -25,7 +25,7 @@ According to the paper:
 0.1, used to ensure a non-zero value inside the logarithm in the case
 that two terms have a pairwise similarity of 0.
 """
-SIGMA = 0.3
+SIGMA = 0.2
 
 
 def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
@@ -43,6 +43,11 @@ def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
     # transform tag map to only list of names, remove low ranked and NSFW tags
     df.tags = df.tags.apply(lambda tags: sorted([tag['name'] for tag in tags if tag['rank'] >= MIN_TAG_RANKING and not tag['isAdult']]))
 
+    # Remove uncommon tags
+    tag_count = df.tags.explode().value_counts()
+    uncommon = tag_count[tag_count < MIN_TAG_APPEARANCES].index.tolist()
+    df.tags = df.tags.apply(lambda tags: [tag for tag in tags if tag not in uncommon])
+
     # Remove Tagless
     df = df[df['tags'].str.len() != 0]
 
@@ -55,7 +60,6 @@ def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
 
     return df, filters
 
-
 def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     t = Task('Filter Data')
     filtered_data = preprocessed_data.copy()
@@ -65,34 +69,40 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     # Sort tags by number of occurrences emulate the papers sort by term weight
     all_occurrences = dict(filtered_data.tags.explode().value_counts())
     all_tags = np.array(sorted(set(filtered_data.tags.explode().drop_duplicates().dropna()),
-                key=lambda x: all_occurrences[x],
+                key=lambda x: (all_occurrences[x], x),
                 reverse=True))
+
+
 
     t = Task('Calculating Similarities')
     pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
-    debug._print_most_similar(pairwise_similarities, all_tags, "Table Tennis")
+
+    debug._print_most_similar(pairwise_similarities, all_tags, 'Stop Motion')
+    debug._print_most_similar(pairwise_similarities, all_tags, 'Wrestling')
     filtered_similarities, filtered_tags = _filter_similarities(pairwise_similarities, all_tags)
     t.end()
 
-    t = Task('Generating Edges')
-    edges = _generate_edges(pairwise_similarities)
-    t.end()
-
+    #debug._tsne_parameter_search(filtered_similarities, edges)
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
     if distances.shape[0] != 1:
-        tsne = TSNE(random_state=1, n_iter=15000, square_distances=True)
+
+        tsne = TSNE(random_state=1, n_iter=15000, init='pca')
         positions: np.ndarray = tsne.fit_transform(distances)
+
         #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1, metric=False)
         #positions = mds.fit_transform(distances)
 
     else:
         positions = np.array([[0, 0]])
-
     #debug._plot_scatter(positions, all_tags)
     #debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
     #return new_distances.tolist()
+
+    t = Task('Generating Edges')
+    edges = _generate_edges(filtered_similarities, positions)
+    t.end()
 
     #positions = nx.spring_layout(positions)
 
@@ -107,22 +117,31 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     return positions.tolist(), edges.tolist(), filtered_tags.tolist()
 
 
-def _generate_edges(pairwise_similarities: np.ndarray):
-    MAX_EDGES = 1
+def _generate_edges(pairwise_similarities: np.ndarray, positions):
+    MAX_EDGES = 3
+    SAMPLE_EDGES = 50
 
-    edges = np.ndarray((0,2))
+    edges = np.ndarray((0,2), dtype=int)
     for i in range(pairwise_similarities.shape[0]):
-        best_matches_index = pairwise_similarities[i].argsort()[::-1][:MAX_EDGES]
-        non_zero = best_matches_index != 0
-        best_matches_index = np.array([best_matches_index[non_zero]]).T
-        current_edges = np.hstack((np.full((len(best_matches_index), 1), i), best_matches_index))
+        # get indexes of most similar
+        best_matches_index = pairwise_similarities[i].argsort()[::-1]
+        # filter loops
+        best_matches_index = best_matches_index[best_matches_index != i]
+        # filter exisiting
+        best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
+        # sample points
+        best_matches_index = best_matches_index.flatten()[:SAMPLE_EDGES]
+        # calculate distances
+        best_matches_distances = euclidean_distances(np.array([positions[i]]), positions[best_matches_index])
+        # get nearest
+        best_matches_index = best_matches_index[np.argsort(best_matches_distances)[0][:MAX_EDGES]]
 
-        # filter self loops
-        current_edges = current_edges[current_edges[:,0] != current_edges[:,1]]
+        best_matches_index = np.array([best_matches_index]).T
+        current_edges = np.hstack((np.full((len(best_matches_index), 1), i), best_matches_index))
 
         # filter existing
         if len(edges) > 0 and len(current_edges) > 0:
-            current_edges = current_edges[sklearn.metrics.pairwise.euclidean_distances(current_edges[:, ::-1], edges).min(1) != 0]
+            current_edges = current_edges[euclidean_distances(current_edges[:, ::-1], edges).min(1) != 0]
 
         edges = np.vstack((edges, current_edges))
 
@@ -149,7 +168,7 @@ def _generate_box(x_center, y_center, width, height, point_distance):
 def _add_boxes(positions: np.ndarray):
     for i, point in enumerate(positions):
         if point[2] == PointType.DATA.value:
-            box = _generate_box(point[0], point[1], 0.8, 0.8, 0.02)
+            box = _generate_box(point[0], point[1], 1.5, 1.5, 0.1)
             box = np.hstack((box, np.full((box.shape[0], 1), i)))
             positions = np.vstack((positions, box))
 
@@ -199,7 +218,7 @@ def _add_random_border(positions: np.ndarray):
             random_regular_grid_sample = np.vstack((random_regular_grid_sample,new_points))
 
     # filter points that are too close to the actual data
-    distances_to_data = sklearn.metrics.pairwise.euclidean_distances(random_regular_grid_sample[:,:2], positions[:,:2])
+    distances_to_data = euclidean_distances(random_regular_grid_sample[:,:2], positions[:,:2])
     mask = distances_to_data.min(1) > border_distance
     positions = np.vstack((positions, random_regular_grid_sample[mask,]))
 
@@ -218,8 +237,7 @@ def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
             for j in range(i, len(tags)):
                 co_occurrences[tag_ids[tags[i]], tag_ids[tags[j]]] += 1
     co_occurrences = co_occurrences.T + co_occurrences
-    #co_occurrences[np.diag_indices_from(co_occurrences)] /= 2
-    np.fill_diagonal(co_occurrences, 0)
+    co_occurrences[np.diag_indices_from(co_occurrences)] /= 2
 
     # calculate jaccard matrix
     for i, tagI in enumerate(all_tags):
