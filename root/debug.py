@@ -52,5 +52,15 @@ def _filter_tag_pairs_by_similarity(pairwise_similarities: np.ndarray, all_tags:
         print(f'{pair[0]} & {pair[1]} ')
 
 
+def _similarity_max_histogram(pairwise_similarities: np.ndarray, all_tags):
+    values = pairwise_similarities.max(0)
+
+
+def _print_most_similar(pairwise_similarities: np.ndarray, all_tags, tag_name='Cute Girls Doing Cute Things'):
+    id = np.where(all_tags == tag_name)
+    similar_id = pairwise_similarities[id].argsort()[0][::-1]
+    similar_name = all_tags[similar_id]
+    print(similar_name)
+
 def _print_stats(processed_data):
     pass

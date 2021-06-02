@@ -44,10 +44,14 @@
 
     <!-- JS -->
     <script>
-        var vertices = {{ map_data | safe }};
+        var vertices = {{ basemap_points | safe }};
         var draw_cirlce = {{circle | safe}};
         var tag_names = {{ tags | safe  }};
+        var edges = {{ basemap_edges | safe }};
     </script>
+
+    <!-- TopoJson -->
+    <script src="https://unpkg.com/topojson@3"></script>
 
     <!-- Our Stuff -->
     <title>Maps of Anime</title>

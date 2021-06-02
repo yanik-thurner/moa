@@ -5,6 +5,7 @@ from sklearn.manifold import TSNE
 from sklearn.manifold import MDS
 from filter import FilterList
 from util import Task, PointType
+import networkx as nx
 
 # TODO: remove for submission
 import debug
@@ -69,9 +70,12 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
 
     t = Task('Calculating Similarities')
     pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
-    filtered_similarities = _filter_similarities(pairwise_similarities)
-    #debug._plot_tag_similarity_matrix(filtered_similarities, all_tags)
-    #debug._filter_tag_pairs_by_similarity(pairwise_similarities, all_tags, 0.15)
+    debug._print_most_similar(pairwise_similarities, all_tags, "Table Tennis")
+    filtered_similarities, filtered_tags = _filter_similarities(pairwise_similarities, all_tags)
+    t.end()
+
+    t = Task('Generating Edges')
+    edges = _generate_edges(pairwise_similarities)
     t.end()
 
     t = Task('Calculating Distances')
@@ -79,7 +83,7 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     if distances.shape[0] != 1:
         tsne = TSNE(random_state=1, n_iter=15000)
         positions: np.ndarray = tsne.fit_transform(distances)
-        #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1)
+        #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1, metric=False)
         #positions = mds.fit_transform(distances)
 
     else:
@@ -90,6 +94,8 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     t.end()
     #return new_distances.tolist()
 
+    #positions = nx.spring_layout(positions)
+
     # add point type column
     positions = np.hstack((positions, np.full((positions.shape[0], 1), PointType.DATA.value)))
     positions = _add_random_border(positions)
@@ -98,7 +104,26 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     plt.show()
 
     positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
-    return positions.tolist(), all_tags.tolist()
+    return positions.tolist(), edges.tolist(), filtered_tags.tolist()
+
+
+def _generate_edges(pairwise_similarities: np.ndarray):
+    MAX_EDGES = 1
+
+    edges = np.ndarray((0,2))
+    for i in range(pairwise_similarities.shape[0] - 1):
+        best_matches_index = pairwise_similarities[i, i:].argsort()[::-1][:MAX_EDGES]
+        non_zero = best_matches_index != 0
+        best_matches_index = np.array([best_matches_index[non_zero]]).T
+        current_edges = np.hstack((np.full((len(best_matches_index), 1), i), best_matches_index))
+
+        # filter existing
+        if len(edges) > 0:
+            current_edges = current_edges[sklearn.metrics.pairwise.euclidean_distances(current_edges[:, ::-1], edges).min(1) != 0]
+
+        edges = np.vstack((edges, current_edges))
+
+    return edges
 
 
 def _generate_box(x_center, y_center, width, height, point_distance):
@@ -119,10 +144,9 @@ def _generate_box(x_center, y_center, width, height, point_distance):
 
 
 def _add_boxes(positions: np.ndarray):
-    _generate_box(0, 0, 1, 1, 0.1)
     for i, point in enumerate(positions):
         if point[2] == PointType.DATA.value:
-            box = _generate_box(point[0], point[1], 1, 0.5, 0.05)
+            box = _generate_box(point[0], point[1], 0.8, 0.8, 0.02)
             box = np.hstack((box, np.full((box.shape[0], 1), i)))
             positions = np.vstack((positions, box))
 
@@ -203,10 +227,10 @@ def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
     return m
 
 
-def _filter_similarities(pairwise_similarities: np.ndarray):
+def _filter_similarities(pairwise_similarities: np.ndarray, all_tags):
     # Filtering maybe isn't needed, since we only got relatively few, but high quality, terms compared to the original paper
     # TODO: Maybe implement implement filter top K terms or remove tags with less than x occurrences here
-    return pairwise_similarities
+    return pairwise_similarities, all_tags
 
 
 def _logarithmic_scaling(x):

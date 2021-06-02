@@ -18,10 +18,10 @@ def index():
     filters.refresh_selection()
 
     t = pipeline.Task('Processing Pipeline')
-    map_data, tags = pipeline.process(preprocessed_data, filters)
+    basemap_points, basemap_edges, tags = pipeline.process(preprocessed_data, filters)
     t.end()
 
-    return render_template("index.html", filters=filters, map_data=map_data, tags=tags, circle=f)
+    return render_template("index.html", filters=filters, basemap_points=basemap_points, basemap_edges=basemap_edges, tags=tags, circle=f)
 
 
 if __name__ == "__main__":
