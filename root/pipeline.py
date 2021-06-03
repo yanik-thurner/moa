@@ -103,21 +103,17 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     t.end()
 
     t = Task('Generating Edges')
-    edges = _generate_edges(filtered_similarities, positions)
+    edges = _generate_edges(filtered_similarities, positions, max_edges=2, sample_percent=0.2)
     t.end()
 
     t = Task('Generating Countries')
-    G = nx.Graph()
-    G.add_edges_from(edges.tolist())
-    adjacency = nx.adjacency_matrix(G).A
+    adjacency = np.zeros((len(filtered_tags), len(filtered_tags)))
+    for edge in _generate_edges(filtered_similarities, positions):
+        adjacency[edge[0], edge[1]] += 1
+    adjacency += adjacency.T
     louvain = Louvain()
-    c = louvain.fit_transform(adjacency)
-    connected_components = [c for c in nx.connected_components(G)]
-    basemap_countries = []
-    for i, component in enumerate(connected_components):
-        for node in component:
-            basemap_countries.append([node, i])
-    basemap_countries = np.array(sorted(basemap_countries, key=lambda x: x[0]))
+    basemap_countries = louvain.fit_transform(adjacency)
+    print(np.unique(basemap_countries))
     t.end()
 
     t = Task('Add support points')
@@ -131,7 +127,7 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     point_types = np.array([[PointType.DATA.value]*len(filtered_tags) +
                             [PointType.BORDER.value]*len(random_points) +
                             sorted([x for x in range(len(all_tags))] * num_box_points)]).T
-    point_countries = np.array([basemap_countries[:,1].tolist() + [CountryType.NONE.value] * (len(positions) - len(filtered_tags))]).T
+    point_countries = np.array([basemap_countries.tolist() + [CountryType.NONE.value] * (len(positions) - len(filtered_tags))]).T
     point_occurrences = None
 
     positions = np.hstack((positions, point_types, point_countries))
@@ -144,24 +140,23 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     return filtered_tags.tolist(), positions.tolist(), edges.tolist()
 
 
-def _generate_edges(pairwise_similarities: np.ndarray, positions):
-    MAX_EDGES = 3
-    SAMPLE_EDGES = int(len(pairwise_similarities) * 0.25)
-
+def _generate_edges(pairwise_similarities: np.ndarray, positions, max_edges=6, sample_percent=0.30):
+    num_samples = int(len(pairwise_similarities) * sample_percent)
     edges = np.ndarray((0,2), dtype=int)
     for i in range(pairwise_similarities.shape[0]):
+
         # get indexes of most similar
         best_matches_index = pairwise_similarities[i].argsort()[::-1]
         # filter loops
         best_matches_index = best_matches_index[best_matches_index != i]
         # filter exisiting
-        #best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
+        best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
         # sample points
-        best_matches_index = best_matches_index.flatten()[:SAMPLE_EDGES]
+        best_matches_index = best_matches_index.flatten()[:num_samples]
         # calculate distances
         best_matches_distances = euclidean_distances(np.array([positions[i]]), positions[best_matches_index])
         # get nearest
-        best_matches_index = best_matches_index[np.argsort(best_matches_distances)[0][:MAX_EDGES]]
+        best_matches_index = best_matches_index[np.argsort(best_matches_distances)[0][:max_edges]]
 
         best_matches_index = np.array([best_matches_index]).T
         current_edges = np.hstack((np.full((len(best_matches_index), 1), i), best_matches_index))
@@ -193,7 +188,7 @@ def _generate_box(x_center, y_center, width, height, point_distance):
 
 
 def _generate_boxes(positions: np.ndarray):
-    blueprint = _generate_box(0, 0, 0.08, 0.06, 0.001)
+    blueprint = _generate_box(0, 0, 0.08, 0.06, 0.006)
     boxes = np.ndarray((0, 2))
     for i, point in enumerate(positions):
         b = blueprint.copy()
