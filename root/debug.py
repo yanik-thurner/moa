@@ -67,11 +67,11 @@ def _print_most_similar(pairwise_similarities: np.ndarray, all_tags, tag_name='C
 def _tsne_parameter_search(sim, edges):
     from sklearn.manifold import TSNE
     from sklearn.utils.fixes import loguniform
-    parameters = {'perplexity': np.random.uniform(1, 60, 5),
-                  'early_exaggeration': np.random.uniform(1, 60, 5),
-                  'learning_rate': np.random.uniform(10, 1000, 5),
-                  'SIGMA':np.random.uniform(0, 1, 5),
-                  'angle': np.random.uniform(0.00001, 1, 5)
+    parameters = {'perplexity': np.random.uniform(1, 60, 6),
+                  'early_exaggeration': np.random.uniform(1, 60, 6),
+                  'learning_rate': np.random.uniform(10, 1000, 6),
+                  'SIGMA':np.random.uniform(0, 1, 6),
+                  'angle': np.random.uniform(0.00001, 1, 6)
                   }
     d = np.inf
     for i0 in parameters[list(parameters.keys())[0]]:

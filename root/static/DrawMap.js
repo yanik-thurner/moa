@@ -1,27 +1,38 @@
-function removeBorderCells(array){
+function removeBorderCells(cells){
     var i = 0;
-    while(i < array.length){
-        if(array[i][0][2] === -2)
-            array.splice(i, 1);
+    while(i < cells.length){
+        if(cells[i][0][2] === -2)
+            cells.splice(i, 1);
         else
             ++i;
     }
-    return array;
+    return cells;
 }
 
-function mergeBoxCells(array){
+function mergeBoxCells(cells){
     var i = 0;
-    while(i < array.length){
-        if(array[i][0][2] >= 0){
-            data_index = array[i][0][2];
-            if(array[i][1])
-                array[data_index][1] = d3.polygonHull(array[data_index][1].concat(array[i][1]));
-            array.splice(i, 1);
+    while(i < cells.length){
+        if(cells[i][0][2] >= 0){
+            data_index = cells[i][0][2];
+            if(cells[i][1])
+                cells[data_index][1] = d3.polygonHull(cells[data_index][1].concat(cells[i][1]));
+            cells.splice(i, 1);
         }
         else
             ++i;
     }
 }
+
+function removeSupportPoints(vertices){
+    var i = 0;
+    while(i < vertices.length){
+        if(vertices[i][2] !== -1)
+            vertices.splice(i, 1);
+        else
+            ++i;
+    }
+}
+
 
 var BrowserText = (function () {
     var canvas = document.createElement('canvas'),
@@ -78,11 +89,13 @@ const cells = data.map((d, i) => [d, voronoi.cellPolygon(i)]);
 
 removeBorderCells(cells)
 mergeBoxCells(cells)
+removeSupportPoints(vertices)
 
 path.data(cells).enter().append("path")
     .attr("stroke", "none")
     .attr("fill", function (d, i) {
-        return c10[i % 10]
+        var country = d[0][3];
+        return c10[country%10]
     })
     //    .attr("d", function(d) { return "M" + d.join("L") + "Z" } );
     .attr("d", polygon);
@@ -131,14 +144,14 @@ g.attr("class", "label")
     .each(function ([[x, y], cell]) {
         //console.log(cell)
         //console.log(d3.polygonArea(cell));
-        cell.scaleThreshold = Math.min(Math.sqrt(displayThreshold / Math.abs(d3.polygonArea(cell))), 10);
-        cell.opacityScale = d3.scaleLinear().domain([cell.scaleThreshold, cell.scaleThreshold * 2]).range([0, 1]);
+        //cell.scaleThreshold = Math.min(Math.sqrt(displayThreshold / Math.abs(d3.polygonArea(cell))), 10);
+        cell.scaleThreshold = 0
+        cell.opacityScale = d3.scaleLinear().domain([cell.scaleThreshold, cell.scaleThreshold * 2]).range([1, 1]);
         //console.log(cell)
     })
     .attr("font-size",function ([, cell], i) {
-        //console.log(Math.floor(-d3.polygonArea(cell) / (displayThreshold/10)))
-        //cell.fs = Math.floor(-d3.polygonArea(cell) / (displayThreshold/10))+1;
-        cell.fs = Math.max(Math.floor(Math.log(Math.abs(d3.polygonArea(cell))))-2.5,1);
+        //cell.fs = Math.max(Math.floor(Math.log(Math.abs(d3.polygonArea(cell))))-2.5,1);
+        cell.fs = 3;
         return cell.fs;
     })
     //.attr("transform", ([d]) => `translate(${d.slice(0, -1)})`)
@@ -153,11 +166,11 @@ g.attr("class", "label")
                 let current = BrowserText.getSize(lines[line], cell.fs, font_family)
                 longest = ((current > longest) ? current : longest);
             }
-            //const position = data_point.slice(0, -1);
-            var position = d3.polygonCentroid(cell);
+            const position = data_point.slice(0, -1);
+            //var position = d3.polygonCentroid(cell);
             position[0] -= longest / 2;
             position[1] -= ((cell.fs+1)/2) * lines.length;
-            return `translate(${position})`
+            return `translate(${position[0]}, ${position[1]})`
         }
     }
     )
@@ -184,6 +197,7 @@ g.attr("class", "label")
             return ""
     })
     .attr('opacity', function (d) {
+        return 1;
         if (d.scaleThreshold < 1) {
             return 1;
         }

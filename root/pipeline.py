@@ -4,9 +4,13 @@ import sklearn.metrics.pairwise
 from sklearn.manifold import TSNE
 from sklearn.manifold import MDS
 from filter import FilterList
-from util import Task, PointType
+from util import Task, PointType, CountryType
 import networkx as nx
 from sklearn.metrics.pairwise import euclidean_distances
+from scipy.spatial import Delaunay
+import sknetwork as skn
+from sknetwork.clustering import Louvain
+
 # TODO: remove for submission
 import debug
 from matplotlib import pyplot as plt
@@ -25,7 +29,7 @@ According to the paper:
 0.1, used to ensure a non-zero value inside the logarithm in the case
 that two terms have a pairwise similarity of 0.
 """
-SIGMA = 0.2
+SIGMA = 0.1
 
 
 def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
@@ -60,6 +64,7 @@ def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
 
     return df, filters
 
+
 def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     t = Task('Filter Data')
     filtered_data = preprocessed_data.copy()
@@ -72,54 +77,76 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
                 key=lambda x: (all_occurrences[x], x),
                 reverse=True))
 
-
-
     t = Task('Calculating Similarities')
     pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
-
-    debug._print_most_similar(pairwise_similarities, all_tags, 'Stop Motion')
-    debug._print_most_similar(pairwise_similarities, all_tags, 'Wrestling')
     filtered_similarities, filtered_tags = _filter_similarities(pairwise_similarities, all_tags)
     t.end()
 
-    #debug._tsne_parameter_search(filtered_similarities, edges)
     t = Task('Calculating Distances')
     distances = _calculate_distances(filtered_similarities)
     if distances.shape[0] != 1:
-
         tsne = TSNE(random_state=1, n_iter=15000, init='pca')
         positions: np.ndarray = tsne.fit_transform(distances)
-
-        #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1, metric=False)
-        #positions = mds.fit_transform(distances)
-
     else:
         positions = np.array([[0, 0]])
-    #debug._plot_scatter(positions, all_tags)
-    #debug._plot_tag_similarity_matrix(distances, all_tags)
     t.end()
-    #return new_distances.tolist()
+
+    t = Task('Spacing out Mappoints')
+    tri = Delaunay(positions)
+    G = nx.Graph()
+    for path in tri.simplices:
+        nx.add_path(G, path)
+    graph_positions = nx.kamada_kawai_layout(G)
+    for k in range(len(graph_positions)):
+        positions[k, 0] = graph_positions[k][0]
+        positions[k, 1] = graph_positions[k][1]
+    t.end()
 
     t = Task('Generating Edges')
     edges = _generate_edges(filtered_similarities, positions)
     t.end()
 
-    #positions = nx.spring_layout(positions)
+    t = Task('Generating Countries')
+    G = nx.Graph()
+    G.add_edges_from(edges.tolist())
+    adjacency = nx.adjacency_matrix(G).A
+    louvain = Louvain()
+    c = louvain.fit_transform(adjacency)
+    connected_components = [c for c in nx.connected_components(G)]
+    basemap_countries = []
+    for i, component in enumerate(connected_components):
+        for node in component:
+            basemap_countries.append([node, i])
+    basemap_countries = np.array(sorted(basemap_countries, key=lambda x: x[0]))
+    t.end()
 
-    # add point type column
-    positions = np.hstack((positions, np.full((positions.shape[0], 1), PointType.DATA.value)))
-    positions = _add_random_border(positions)
-    #positions = _add_boxes(positions)
+    t = Task('Add support points')
+    # generate support
+    random_points = _generate_random_border(positions)
+    boxes = _generate_boxes(positions)
+    # attach them
+    positions = np.vstack((positions, random_points, boxes))
+    # add adtiontal columns
+    num_box_points = int(len(boxes)/len(filtered_tags))
+    point_types = np.array([[PointType.DATA.value]*len(filtered_tags) +
+                            [PointType.BORDER.value]*len(random_points) +
+                            sorted([x for x in range(len(all_tags))] * num_box_points)]).T
+    point_countries = np.array([basemap_countries[:,1].tolist() + [CountryType.NONE.value] * (len(positions) - len(filtered_tags))]).T
+    point_occurrences = None
+
+    positions = np.hstack((positions, point_types, point_countries))
     plt.scatter(positions[:,0], positions[:,1])
     plt.show()
+    t.end()
 
+    # normalize point data
     positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
-    return positions.tolist(), edges.tolist(), filtered_tags.tolist()
+    return filtered_tags.tolist(), positions.tolist(), edges.tolist()
 
 
 def _generate_edges(pairwise_similarities: np.ndarray, positions):
     MAX_EDGES = 3
-    SAMPLE_EDGES = 50
+    SAMPLE_EDGES = int(len(pairwise_similarities) * 0.25)
 
     edges = np.ndarray((0,2), dtype=int)
     for i in range(pairwise_similarities.shape[0]):
@@ -128,7 +155,7 @@ def _generate_edges(pairwise_similarities: np.ndarray, positions):
         # filter loops
         best_matches_index = best_matches_index[best_matches_index != i]
         # filter exisiting
-        best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
+        #best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
         # sample points
         best_matches_index = best_matches_index.flatten()[:SAMPLE_EDGES]
         # calculate distances
@@ -162,20 +189,21 @@ def _generate_box(x_center, y_center, width, height, point_distance):
     left = np.hstack((np.full((numy, 1), x1), y))
     right = np.hstack((np.full((numy, 1), x2), y))
     box = np.vstack((top, bottom, left, right))
-    return box
+    return np.unique(box, axis=0)
 
 
-def _add_boxes(positions: np.ndarray):
+def _generate_boxes(positions: np.ndarray):
+    blueprint = _generate_box(0, 0, 0.08, 0.06, 0.001)
+    boxes = np.ndarray((0, 2))
     for i, point in enumerate(positions):
-        if point[2] == PointType.DATA.value:
-            box = _generate_box(point[0], point[1], 1.5, 1.5, 0.1)
-            box = np.hstack((box, np.full((box.shape[0], 1), i)))
-            positions = np.vstack((positions, box))
+        b = blueprint.copy()
+        b[:, 0] += point[0]
+        b[:, 1] += point[1]
+        boxes = np.vstack((boxes, b))
+    return boxes
 
-    return positions
 
-
-def _add_random_border(positions: np.ndarray):
+def _generate_random_border(positions: np.ndarray):
     NUM_RANDOM_SAMPLES_PER_CELL = 10
     BORDER_SIZE_PERCENT = 0.15
     BORDER_DISTANCE_PERCENT = 0.10
@@ -208,21 +236,19 @@ def _add_random_border(positions: np.ndarray):
     cells_borders_x = np.linspace(grid_corners[0], grid_corners[2], num_cells_x + 1)
     cells_borders_y = np.linspace(grid_corners[1], grid_corners[3], num_cells_y + 1)
 
-    random_regular_grid_sample = np.empty((0, 3))
+    random_regular_grid_sample = np.empty((0, 2))
 
     for i in range(0, num_cells_x):
         for j in range(0, num_cells_y):
             x = np.random.uniform(cells_borders_x[i], cells_borders_x[i+1], (NUM_RANDOM_SAMPLES_PER_CELL, 1))
             y = np.random.uniform(cells_borders_y[j], cells_borders_y[j+1], (NUM_RANDOM_SAMPLES_PER_CELL, 1))
-            new_points = np.hstack((x, y, np.full((NUM_RANDOM_SAMPLES_PER_CELL, 1), PointType.BORDER.value)))
-            random_regular_grid_sample = np.vstack((random_regular_grid_sample,new_points))
+            new_points = np.hstack((x, y))
+            random_regular_grid_sample = np.vstack((random_regular_grid_sample, new_points))
 
     # filter points that are too close to the actual data
     distances_to_data = euclidean_distances(random_regular_grid_sample[:,:2], positions[:,:2])
     mask = distances_to_data.min(1) > border_distance
-    positions = np.vstack((positions, random_regular_grid_sample[mask,]))
-
-    return positions
+    return random_regular_grid_sample[mask, ]
 
 
 def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):

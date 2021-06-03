@@ -18,10 +18,13 @@ def index():
     filters.refresh_selection()
 
     t = pipeline.Task('Processing Pipeline')
-    basemap_points, basemap_edges, tags = pipeline.process(preprocessed_data, filters)
+    tags, basemap_points, basemap_edges = pipeline.process(preprocessed_data, filters)
     t.end()
 
-    return render_template("index.html", filters=filters, basemap_points=basemap_points, basemap_edges=basemap_edges, tags=tags, circle=f)
+    return render_template("index.html", filters=filters,
+                           basemap_points=basemap_points,
+                           basemap_edges=basemap_edges,
+                           tags=tags, circle=f)
 
 
 if __name__ == "__main__":
@@ -41,4 +44,4 @@ if __name__ == "__main__":
     t.end()
 
     # TODO: disable debug so program doesn't run twice on initialization
-    app.run(debug=False, port=5000)
+    app.run(debug=True)
