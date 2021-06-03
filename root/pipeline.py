@@ -79,7 +79,7 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     if distances.shape[0] != 1:
         tsne = TSNE(random_state=1, n_iter=15000)
         positions: np.ndarray = tsne.fit_transform(distances)
-        #mds = MDS(n_components=2, max_iter=3000, eps=1e-12, random_state=1)
+        #mds = MDS(metric=False, n_components=2, max_iter=3000, eps=1e-12, random_state=1)
         #positions = mds.fit_transform(distances)
 
     else:
