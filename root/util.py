@@ -7,6 +7,10 @@ class PointType(Enum):
     BORDER = -2
 
 
+class CountryType(Enum):
+    NONE = -1
+
+
 class Task:
     """
     A helper class to measure execution time of certain tasks.
