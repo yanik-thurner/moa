@@ -145,10 +145,11 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
 
     t = Task('Calculate Heatmap occurrences')
     heat_occurrences_dict = dict(filtered_data_heat.tags.explode().value_counts())
-    heat_tag = np.array(sorted(set(filtered_data_heat.tags.explode().drop_duplicates().dropna()),
+    heat_tags = np.array(sorted(set(filtered_data_heat.tags.explode().drop_duplicates().dropna()),
                                key=lambda x: (heat_occurrences_dict[x], x),
                                reverse=True))
-    heat_occurrences_sorted = [heat_occurrences_dict[x] for x in heat_tag]
+    heat_tags = [x for x in heat_tags if x in filtered_tags]
+    heat_occurrences_sorted = [heat_occurrences_dict[x] for x in heat_tags]
     t.end()
 
     return filtered_tags.tolist(), positions.tolist(), edges.tolist(), heat_occurrences_sorted
