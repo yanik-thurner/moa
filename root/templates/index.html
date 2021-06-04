@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename = 'jquery-ui-slider-pips.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='jquery-ui-slider-pips.min.css') }}">
     <script>
         $(function(){
             $("#slider-range_b").slider({
@@ -22,12 +24,12 @@
                 values: [{{filters_base['seasonYear'].available_values[0]}}, {{filters_base['seasonYear'].available_values[-1]}}],
 
                 slide: function (event, ui) {
-                    $("#seasonYear_min_b").val(ui.values[0]);
-                    $("#seasonYear_max_b").val(ui.values[1]);
+                    {#$("#seasonYear_min_b").val(ui.values[0]);#}
+                    {#$("#seasonYear_max_b").val(ui.values[1]);#}
                 }
-            });
-            $("#seasonYear_min_b").val($("#slider-range_b").slider("values", 0));
-            $("#seasonYear_max_b").val($("#slider-range_b").slider("values", 1));
+            }).slider("float");
+            {#$("#seasonYear_min_b").val($("#slider-range_b").slider("values", 0));#}
+            {#$("#seasonYear_max_b").val($("#slider-range_b").slider("values", 1));#}
         });
 
         $(function(){
@@ -38,12 +40,12 @@
                 values: [{{filters_heat['seasonYear'].available_values[0]}}, {{filters_heat['seasonYear'].available_values[-1]}}],
 
                 slide: function (event, ui) {
-                    $("#seasonYear_min_h").val(ui.values[0]);
-                    $("#seasonYear_max_h").val(ui.values[1]);
+                    {#$("#seasonYear_min_h").val(ui.values[0]);#}
+                    {#$("#seasonYear_max_h").val(ui.values[1]);#}
                 }
-            });
-            $("#seasonYear_min_h").val($("#slider-range_h").slider("values", 0));
-            $("#seasonYear_max_h").val($("#slider-range_h").slider("values", 1));
+            }).slider("float");
+            {#$("#seasonYear_min_h").val($("#slider-range_h").slider("values", 0));#}
+            {#$("#seasonYear_max_h").val($("#slider-range_h").slider("values", 1));#}
         });
     </script>
 
@@ -108,7 +110,7 @@
                 <td><label>Release Year: </label></td>
                 <td>
                     <input type="text" id="seasonYear_min_b" name="seasonYear_min_b" readonly
-                           style="width: 40px; border:0;  font-weight:bold;"> - <input type="text"
+                           style="width: 40px; border:0;  font-weight:bold;">  <input type="text"
                                                                                        id="seasonYear_max_b"
                                                                                        name="seasonYear_max_b"
                                                                                        readonly
@@ -152,7 +154,7 @@
                 <td><label>Release Year: </label></td>
                 <td>
                     <input type="text" id="seasonYear_min_h" name="seasonYear_min_h" readonly
-                           style="width: 40px; border:0;  font-weight:bold;"> - <input type="text"
+                           style="width: 40px; border:0;  font-weight:bold;">  <input type="text"
                                                                                        id="seasonYear_max_h"
                                                                                        name="seasonYear_max_h"
                                                                                        readonly
