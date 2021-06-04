@@ -100,7 +100,7 @@ body{
 #slider-range_b .ui-slider-handle,
 #slider-range_b .ui-slider-range,
 #slider-range_b .ui-slider-pip[class*=ui-slider-pip-selected] .ui-slider-line{
-  background-color: #25daa5; }
+  background-color: #04AA6D; }
 
 
 #slider-range_b-vertical-1 .ui-slider-handle,
@@ -207,7 +207,7 @@ body{
 #slider-range_h .ui-slider-handle,
 #slider-range_h .ui-slider-range,
 #slider-range_h .ui-slider-pip[class*=ui-slider-pip-selected] .ui-slider-line{
-  background-color: #25daa5; }
+  background-color: #04AA6D; }
 
 
 #slider-range_h-vertical-1 .ui-slider-handle,
