@@ -97,8 +97,8 @@ vertices.forEach(x => {
     x[1] = (x[1] * scale_factor / 2) + scale_factor / 2
 })
 //console.log(vertices);
-
 data = vertices;
+
 orient = ({
     top: text => text.attr("text-anchor", "middle").attr("y", -6),
     right: text => text.attr("text-anchor", "start").attr("dy", "0.35em").attr("x", 6),
@@ -168,7 +168,6 @@ densityData.forEach((x,i) => {
     if (x.value > max_v)
         max_v = x.value;
 })
-console.log(max_v)
 
 
 // var color = d3.scalePow()
@@ -206,6 +205,15 @@ g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3).att
             null;
     });
 
+console.log(vertices)
+max_base = 0;
+cells.forEach(([x,],i) => {
+    console.log(x)
+    if (x[2] === -1 && x[4] > max_base)
+        max_base = x[4];
+})
+var font_sz = d3.scalePow().domain([0, max_base]).range([3,5]);
+
 g.selectAll("line").data(edges).enter().append("line")
     .attr("x1", (d) => line_offset(d, "x1"))
     .attr("y1", (d) => line_offset(d, "y1"))
@@ -227,9 +235,9 @@ g.attr("class", "label")
         cell.opacityScale = d3.scaleLinear().domain([cell.scaleThreshold, cell.scaleThreshold * 2]).range([1, 1]);
         //console.log(cell)
     })
-    .attr("font-size",function ([, cell], i) {
+    .attr("font-size",function ([dat, cell], i) {
         //cell.fs = Math.max(Math.floor(Math.log(Math.abs(d3.polygonArea(cell))))-2.5,1);
-        cell.fs = 3;
+        cell.fs = font_sz(dat[4]);
         return cell.fs;
     })
     //.attr("transform", ([d]) => `translate(${d.slice(0, -1)})`)
