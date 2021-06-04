@@ -153,7 +153,7 @@ def _generate_edges(pairwise_similarities: np.ndarray, positions, max_edges=6, s
         # filter loops
         best_matches_index = best_matches_index[best_matches_index != i]
         # filter exisiting
-        best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
+        #best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
         # sample points
         best_matches_index = best_matches_index.flatten()[:num_samples]
         # calculate distances

@@ -187,12 +187,34 @@ g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3)
             null;
     });
 
-
+function line_offset(d, attr){
+    var OFFSET = 5;
+    var A = [vertices[d[0]][0], vertices[d[0]][1]];
+    var B = [vertices[d[1]][0], vertices[d[1]][1]];
+    var AB = [B[0] - A[0], B[1] - A[1]];
+    var BA = [A[0] - B[0], A[1] - B[1]];
+    var ABmag = Math.sqrt(Math.pow(AB[0], 2) + Math.pow(AB[1], 2));
+    var BAmag = Math.sqrt(Math.pow(BA[0], 2) + Math.pow(BA[1], 2));
+    AB = [AB[0] / ABmag, AB[1]/ABmag];
+    BA = [BA[0] / BAmag, BA[1]/BAmag];
+    if(attr === "x1")
+        return A[0] + OFFSET * AB[0]
+    if(attr === "y1")
+        return A[1] + OFFSET * AB[1]
+    if(attr === "x2")
+        return B[0] + OFFSET * BA[0]
+    if(attr === "y2")
+        return B[1] + OFFSET * BA[1]
+}
 g.selectAll("line").data(edges).enter().append("line")
-    .attr("x1", (d) => vertices[d[0]][0])
-    .attr("y1", (d) => vertices[d[0]][1])
-    .attr("x2", (d) => vertices[d[1]][0])
-    .attr("y2", (d) => vertices[d[1]][1])
+    //.attr("x1", (d) => vertices[d[0]][0] + Math.sign((vertices[d[1]][0] - vertices[d[0]][0])) * 2)
+    //.attr("y1", (d) => vertices[d[0]][1] + Math.sign((vertices[d[1]][1] - vertices[d[0]][1])) * 2)
+    //.attr("x2", (d) => vertices[d[1]][0] + Math.sign((vertices[d[1]][0] - vertices[d[1]][0])) * 1)
+    //.attr("y2", (d) => vertices[d[1]][1] + Math.sign((vertices[d[0]][1] - vertices[d[1]][1])) * 1)
+    .attr("x1", (d) => line_offset(d, "x1"))
+    .attr("y1", (d) => line_offset(d, "y1"))
+    .attr("x2", (d) => line_offset(d, "x2"))
+    .attr("y2", (d) => line_offset(d, "y2"))
     .attr("style", "stroke:rgb(70,70,70);stroke-width:0.3;stroke-opacity: .8");
 
 //console.log({{ tags | safe  }})
