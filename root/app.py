@@ -16,12 +16,13 @@ f = 'false'
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    global filters
-
-    filters.refresh_selection()
+    global filters_base
+    global filters_heat
+    filters_base.refresh_selection()
+    filters_heat.refresh_selection()
 
     t = pipeline.Task('Processing Pipeline')
-    tags, basemap_points, basemap_edges, heat_tags = pipeline.process(preprocessed_data, filters)
+    tags, basemap_points, basemap_edges, heat_tags = pipeline.process(preprocessed_data, filters_base, filters_heat)
     t.end()
 
     return render_template("index.html", filters_base=filters_base,

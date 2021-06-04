@@ -65,20 +65,22 @@ def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
     return df, filters
 
 
-def process(preprocessed_data: pd.DataFrame, filters: FilterList):
+def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_heat: FilterList):
     t = Task('Filter Data')
-    filtered_data = preprocessed_data.copy()
-    filters.filter(filtered_data)
+    filtered_data_base = preprocessed_data.copy()
+    filtered_data_heat = preprocessed_data.copy()
+    filters_base.filter(filtered_data_base)
+    filters_heat.filter(filtered_data_heat)
     t.end()
 
     # Sort tags by number of occurrences emulate the papers sort by term weight
-    all_occurrences = dict(filtered_data.tags.explode().value_counts())
-    all_tags = np.array(sorted(set(filtered_data.tags.explode().drop_duplicates().dropna()),
+    all_occurrences = dict(filtered_data_base.tags.explode().value_counts())
+    all_tags = np.array(sorted(set(filtered_data_base.tags.explode().drop_duplicates().dropna()),
                 key=lambda x: (all_occurrences[x], x),
                 reverse=True))
 
     t = Task('Calculating Similarities')
-    pairwise_similarities = _jaccard_matrix(all_tags, filtered_data.tags)
+    pairwise_similarities = _jaccard_matrix(all_tags, filtered_data_base.tags)
     filtered_similarities, filtered_tags = _filter_similarities(pairwise_similarities, all_tags)
     t.end()
 
@@ -139,8 +141,15 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     # normalize point data
     positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
 
-    heat_tags = [all_occurrences[x] for x in filtered_tags]
-    return filtered_tags.tolist(), positions.tolist(), edges.tolist(), heat_tags
+    t = Task('Calculate Heatmap occurrences')
+    heat_occurrences_dict = dict(filtered_data_base.tags.explode().value_counts())
+    heat_tag = np.array(sorted(set(filtered_data_base.tags.explode().drop_duplicates().dropna()),
+                               key=lambda x: (all_occurrences[x], x),
+                               reverse=True))
+    heat_occurrences_sorted = [heat_occurrences_dict[x] for x in heat_tag]
+    t.end()
+
+    return filtered_tags.tolist(), positions.tolist(), edges.tolist(), heat_occurrences_sorted
 
 
 def _generate_edges(pairwise_similarities: np.ndarray, positions, max_edges=6, sample_percent=0.30):

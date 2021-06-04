@@ -116,7 +116,7 @@ class StudioFilter(Filter):
         return 'studios'
 
     def refresh_selection(self):
-        self.selected_values = x if (x := request.form.getlist(f'{self.column_name}[]', type=str)) else ["All"]
+        self.selected_values = x if (x := request.form.getlist(f'{self.column_name}_{self.type.value}[]', type=str)) else ["All"]
 
         if "All" in self.selected_values or not len(self.selected_values):
             self.selected_values = ["All"]
@@ -125,8 +125,8 @@ class StudioFilter(Filter):
 class ReleaseYearFilter(Filter):
     def refresh_selection(self):
         self.selected_values = [x for x in range(
-            request.form.get(f'{self.column_name}_min', type=int, default=self.available_values[0]),
-            request.form.get(f'{self.column_name}_max', type=int, default=self.available_values[-1]) + 1)]
+            request.form.get(f'{self.column_name}_min_{self.type.value}', type=int, default=self.available_values[0]),
+            request.form.get(f'{self.column_name}_max_{self.type.value}', type=int, default=self.available_values[-1]) + 1)]
 
     def initialize_data(self, data):
         self.available_values = [x for x in range(data[self.column_name].min(), data[self.column_name].max())]
@@ -165,6 +165,6 @@ class MediaTypeFilter(Filter):
         return 'format'
 
     def refresh_selection(self):
-        self.selected_values = x if (x := request.form.getlist(f'{self.column_name}[]', type=str)) else ["All"]
+        self.selected_values = x if (x := request.form.getlist(f'{self.column_name}_{self.type.value}[]', type=str)) else ["All"]
         if "All" in self.selected_values or not len(self.selected_values):
             self.selected_values = ["All"]
