@@ -177,7 +177,7 @@ var color = d3.scaleSequential( d3.interpolateCool)
     .domain([0, max_v]) // Points per square pixel.
 var op_ = d3.scalePow().domain([0, 1]).range([0,1]);
 
-console.log(tag_names)
+
 g.insert("g", "g")
     .selectAll("path")
     .data(densityData)
@@ -205,10 +205,9 @@ g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3).att
             null;
     });
 
-console.log(vertices)
+
 max_base = 0;
 cells.forEach(([x,],i) => {
-    console.log(x)
     if (x[2] === -1 && x[4] > max_base)
         max_base = x[4];
 })
