@@ -1,19 +1,14 @@
 import numpy as np
 import pandas as pd
-import sklearn.metrics.pairwise
 from sklearn.manifold import TSNE
-from sklearn.manifold import MDS
 from filter import FilterList
-from util import Task, PointType, CountryType
+from util import Task, PointType
 import networkx as nx
 from sklearn.metrics.pairwise import euclidean_distances
 from scipy.spatial import Delaunay
 import sknetwork as skn
 from sknetwork.clustering import Louvain
 
-# TODO: remove for submission
-import debug
-from matplotlib import pyplot as plt
 
 """
 The minimum ranking (ranging from 0 to 100) to be considered a valid tag for a show.
@@ -33,6 +28,13 @@ SIGMA = 0.1
 
 
 def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
+    """
+    Preprocessing pipeline, taking the raw data from the json file as a pandas DataFrame and clean it up, e.g. filter
+    invalid values. Also runs all of the preprocessing steps required for each filter.
+    @param raw_data: raw data from json file as pandas DataFrame
+    @return: preprocessed dataframe and initialized filters.
+    """
+    # initialize filters
     filters = FilterList()
 
     # transpose so columns are attributes and rows are anime ids
@@ -66,6 +68,27 @@ def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
 
 
 def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_heat: FilterList):
+    """
+    Main processing pipeline of this application. The main tasks are:
+        - Filtering the Data based on the selected filter values
+        - Calculate the pairwise similarities of the filtered tags
+        - Scale the similarities to better represent distances.
+        - Generate the edges for the basemap
+        - Space out the map points so that the text wont overlap less
+        - Generate the countries for the basemap
+        - Generate support points i.e. random points around the data for smoother edges outside and boxes points around
+          the data for smoother edges inside
+        - Calculate the frequencies for the heatmap
+        - normalize the data points so that they can be scaled in the frontend
+    @param preprocessed_data: data resulting from the preprocess method as a Pandas DataFrame
+    @param filters_base: FilterList for Basemap filters
+    @param filters_heat: FilterList for Heatmap filters
+    @return: returns a tuple of:
+        - tags for the basemap
+        - position of data points including type, county, and number of occurrences
+        - list of edges edges referencing the index of the disappoints
+        - number of occurrences for heatmap
+    """
     t = Task('Filter Data')
     filtered_data_base = preprocessed_data.copy()
     filtered_data_heat = preprocessed_data.copy()
@@ -94,7 +117,7 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     t.end()
 
     t = Task('Generating Edges')
-    edges = _generate_edges(filtered_similarities, positions, max_edges=2, sample_percent=0.2)
+    edges = _generate_edges(filtered_similarities, positions, 2, 0.2)
     t.end()
 
     t = Task('Spacing out Mappoints')
@@ -103,7 +126,6 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     for path in tri.simplices:
         nx.add_path(G, path)
     G.add_edges_from(edges)
-
     graph_positions = nx.kamada_kawai_layout(G)
     for k in sorted(graph_positions.keys()):
         positions[k, 0] = graph_positions[k][0]
@@ -112,7 +134,7 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
 
     t = Task('Generating Countries')
     adjacency = np.zeros((len(filtered_tags), len(filtered_tags)))
-    for edge in _generate_edges(filtered_similarities, positions):
+    for edge in _generate_edges(filtered_similarities, positions, 6, 0.3):
         adjacency[edge[0], edge[1]] += 1
     adjacency += adjacency.T
     louvain = Louvain()
@@ -132,16 +154,10 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     point_types = np.array([[PointType.DATA.value]*len(filtered_tags) +
                             [PointType.BORDER.value]*len(random_points) +
                             sorted([x for x in range(len(all_tags))] * num_box_points_per_box)]).T
-    point_countries = np.array([basemap_countries.tolist() + [CountryType.NONE.value] * num_support]).T
+    point_countries = np.array([basemap_countries.tolist() + [-1] * num_support]).T
     point_occurrences = np.array([[all_occurrences[x] for x in filtered_tags] + [0] * num_support]).T
-
     positions = np.hstack((positions, point_types, point_countries, point_occurrences))
-    plt.scatter(positions[:,0], positions[:,1])
-    plt.show()
     t.end()
-
-    # normalize point data
-    positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
 
     t = Task('Calculate Heatmap occurrences')
     heat_occurrences_dict = dict(filtered_data_heat.tags.explode().value_counts())
@@ -152,10 +168,21 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     heat_occurrences_sorted = [heat_occurrences_dict[x] for x in heat_tags]
     t.end()
 
+    # normalize point data
+    positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
     return filtered_tags.tolist(), positions.tolist(), edges.tolist(), heat_occurrences_sorted
 
 
-def _generate_edges(pairwise_similarities: np.ndarray, positions, max_edges=6, sample_percent=0.30):
+def _generate_edges(pairwise_similarities: np.ndarray, positions: np.ndarray, max_edges=2, sample_percent=0.05):
+    """
+    Generate the edges based on similarities. Similarities are sorted descending, self loops are filtered and then a
+    certain number of points are samples. From these samples the edges are drawn to the nearest points.
+    @param pairwise_similarities: NxN similiarity matrix as np.array
+    @param positions: positions resulting from dimensionality reduction
+    @param max_edges: soft maximum of edges as described in the paper
+    @param sample_percent: percent of overall points of how many best matches should be sampled
+    @return: list of lists containing pairs of points which are connected by edges.
+    """
     num_samples = int(len(pairwise_similarities) * sample_percent)
     edges = np.ndarray((0,2), dtype=int)
     for i in range(pairwise_similarities.shape[0]):
@@ -164,8 +191,6 @@ def _generate_edges(pairwise_similarities: np.ndarray, positions, max_edges=6, s
         best_matches_index = pairwise_similarities[i].argsort()[::-1]
         # filter loops
         best_matches_index = best_matches_index[best_matches_index != i]
-        # filter exisiting
-        #best_matches_index = best_matches_index[edges[edges[:,1] == i][:,0] != best_matches_index]
         # sample points
         best_matches_index = best_matches_index.flatten()[:num_samples]
         # calculate distances
@@ -186,6 +211,16 @@ def _generate_edges(pairwise_similarities: np.ndarray, positions, max_edges=6, s
 
 
 def _generate_box(x_center, y_center, width, height, point_distance):
+    """
+    Generate points in the form of a rectangle around a certain point with provided width, height, and distance between
+    those points.
+    @param x_center: X coordinate of box center
+    @param y_center: Y coordinate of box center
+    @param width: width of the box
+    @param height: height of the box
+    @param point_distance: distance between the points that form the box
+    @return: points that form the box
+    """
     x1 = x_center - width/2
     x2 = x_center + width/2
     y1 = y_center - height/2
@@ -203,6 +238,11 @@ def _generate_box(x_center, y_center, width, height, point_distance):
 
 
 def _generate_boxes(positions: np.ndarray):
+    """
+    generates a box and moves a copy of it to all data point positions. Returns the list of box points
+    @param positions: np array of data points
+    @return: np array of box points
+    """
     blueprint = _generate_box(0, 0, 0.08, 0.06, 0.006)
     boxes = np.ndarray((0, 2))
     for i, point in enumerate(positions):
@@ -214,6 +254,12 @@ def _generate_boxes(positions: np.ndarray):
 
 
 def _generate_random_border(positions: np.ndarray):
+    """
+    Generates random points around the cluster of data points. The points are sampled randomly in each cell of a
+    regular grid.
+    @param positions: positions of data points
+    @return: np array of random points around the cluster
+    """
     NUM_RANDOM_SAMPLES_PER_CELL = 10
     BORDER_SIZE_PERCENT = 0.15
     BORDER_DISTANCE_PERCENT = 0.10
@@ -231,23 +277,23 @@ def _generate_random_border(positions: np.ndarray):
     if dx_data == 0 and dy_data == 0:
         dx_data, dy_data = 1, 1
 
+    # extend the corners of the sample grid so that there is enough space around the cluster
     border_distance = max(dx_data, dy_data) * BORDER_DISTANCE_PERCENT
     grid_corners[0] -= dx_data * BORDER_DISTANCE_PERCENT + dx_data * BORDER_SIZE_PERCENT
     grid_corners[1] -= dy_data * BORDER_DISTANCE_PERCENT + dy_data * BORDER_SIZE_PERCENT
     grid_corners[2] += dx_data * BORDER_DISTANCE_PERCENT + dx_data * BORDER_SIZE_PERCENT
     grid_corners[3] += dy_data * BORDER_DISTANCE_PERCENT + dy_data * BORDER_SIZE_PERCENT
 
+    # calculate the borders of cells of the regular grid.
     dx_grid = abs(grid_corners[2] - grid_corners[0])
     dy_grid = abs(grid_corners[3] - grid_corners[1])
-
     num_cells_x = int(dx_grid / (dx_grid * CELL_SICE_PERCENT))
     num_cells_y = int(dy_grid / (dy_grid * CELL_SICE_PERCENT))
-
     cells_borders_x = np.linspace(grid_corners[0], grid_corners[2], num_cells_x + 1)
     cells_borders_y = np.linspace(grid_corners[1], grid_corners[3], num_cells_y + 1)
 
+    # sample in the grid
     random_regular_grid_sample = np.empty((0, 2))
-
     for i in range(0, num_cells_x):
         for j in range(0, num_cells_y):
             x = np.random.uniform(cells_borders_x[i], cells_borders_x[i+1], (NUM_RANDOM_SAMPLES_PER_CELL, 1))
@@ -262,6 +308,13 @@ def _generate_random_border(positions: np.ndarray):
 
 
 def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
+    """
+    Calculate the Jaccard coefficient for each pair of tags which is defined as:
+    J(t1, t2) = Number of common occurrences(t1, t2) / Number of individual occurrences(t1, t2)
+    @param all_tags: list of all tags
+    @param tags_column: tags column of the filtered data
+    @return: NxN matrix of jaccard coefficients where N is the number of all tags
+    """
     m = np.zeros((len(all_tags), len(all_tags)))
     all_occurrences = dict(tags_column.explode().value_counts())
     co_occurrences = np.zeros((len(all_tags), len(all_tags)))
@@ -285,19 +338,29 @@ def _jaccard_matrix(all_tags: np.ndarray, tags_column: pd.Series):
 
 
 def _filter_similarities(pairwise_similarities: np.ndarray, all_tags):
-    # Filtering maybe isn't needed, since we only got relatively few, but high quality, terms compared to the original paper
-    # TODO: Maybe implement implement filter top K terms or remove tags with less than x occurrences here
+    """
+    Placeholder method, since this is a pipeline step in the original implementation but, to this point, was not needed
+    in our case.
+    @param pairwise_similarities: NxN matrix of similarities
+    @param all_tags: list of all tags
+    @return: filtered similarities and tags
+    """
+    # Filtering isn't needed, since we only got relatively few, but high quality, terms compared to the original paper
     return pairwise_similarities, all_tags
 
 
-def _logarithmic_scaling(x):
+def _logarithmic_scaling(x: float) -> float:
+    """"
+    Method to scale a similarity logarithmically to represent a distance, as described in the paper
+    """
     global SIGMA
     return -np.log((1 - SIGMA) * x + SIGMA)
 
 
 def _calculate_distances(filtered_similarities: np.ndarray):
+    """
+    Scales each value of the similarity matrix logarithmically
+    @param filtered_similarities: NxN similarity matrix
+    @return: NxN distance matrix
+    """
     return _logarithmic_scaling(filtered_similarities)
-
-
-def _cluster_tags():
-    pass

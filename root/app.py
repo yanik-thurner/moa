@@ -16,6 +16,9 @@ f = 'false'
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    """
+    Main root method, gets called when a GET or POST at the main page occurs
+    """
     global filters_base
     global filters_heat
     filters_base.refresh_selection()
@@ -51,5 +54,4 @@ if __name__ == "__main__":
     filters_heat.set_type(Filter.FilterType.HEATMAP)
     t.end()
 
-    # TODO: disable debug so program doesn't run twice on initialization
-    app.run(debug=True)
+    app.run(debug=False)
