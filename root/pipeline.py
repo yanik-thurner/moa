@@ -93,20 +93,26 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
         positions = np.array([[0, 0]])
     t.end()
 
-    t = Task('Spacing out Mappoints')
-    tri = Delaunay(positions)
-    G = nx.Graph()
-    for path in tri.simplices:
-        nx.add_path(G, path)
-    graph_positions = nx.kamada_kawai_layout(G)
-    for k in range(len(graph_positions)):
-        positions[k, 0] = graph_positions[k][0]
-        positions[k, 1] = graph_positions[k][1]
-    t.end()
-
     t = Task('Generating Edges')
     edges = _generate_edges(filtered_similarities, positions, max_edges=2, sample_percent=0.2)
     t.end()
+
+    t = Task('Spacing out Mappoints')
+    G = nx.Graph()
+    G.add_edges_from(edges)
+    """
+    tri = Delaunay(positions)
+    for path in tri.simplices:
+        nx.add_path(G, path)
+    
+
+    graph_positions = nx.kamada_kawai_layout(G)
+    for k in sorted(graph_positions.keys()):
+        positions[k, 0] = graph_positions[k][0]
+        positions[k, 1] = graph_positions[k][1]
+    t.end()"""
+
+
 
     t = Task('Generating Countries')
     adjacency = np.zeros((len(filtered_tags), len(filtered_tags)))

@@ -14,6 +14,9 @@ function mergeBoxCells(cells){
     while(i < cells.length){
         if(cells[i][0][2] >= 0){
             data_index = cells[i][0][2];
+            if(cells[data_index][1] === null){
+                console.log("asd")
+            }
             if(cells[i][1])
                 cells[data_index][1] = d3.polygonHull(cells[data_index][1].concat(cells[i][1]));
             cells.splice(i, 1);
@@ -23,16 +26,6 @@ function mergeBoxCells(cells){
     }
 }
 
-function mergeCountry(cells){
-    let countries = [];
-    cells.forEach((c, i) => {
-        while (countries.length <= c[0][3]) {
-            countries.push([]);
-        }
-        countries[c[0][3]] = countries[c[0][3]].concat(c[1]);
-    })
-    return countries;
-}
 
 function removeSupportPoints(vertices){
     var i = 0;
@@ -86,7 +79,7 @@ var BrowserText = (function () {
 })();
 
 
-const  width = 1200, height = 1200, displayThreshold = 2000, scale_factor = 600,
+const  width = 600, height = 600, displayThreshold = 2000, scale_factor = 600,
     font_height = 3, font_family = "sans-serif";
 var c10 = d3.schemePaired;
 //var vertices = d3.range(10).map(function(d) {
