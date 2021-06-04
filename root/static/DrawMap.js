@@ -132,7 +132,7 @@ function polygon(b, i) {
 
 dense_data = []
 heat_tags.forEach((x,i) => {
-    for(j = 0; j < i; j++){
+    for(j = 0; j < x; j++){
         dense_data.push(cells[i][0])
     }
 })
@@ -156,19 +156,17 @@ console.log(max_v)
 //     .domain([0, max_v]) // Points per square pixel.
 //     .range(["rgba(0,0,0,0)", "rgba(105,179,200,0.5)"])
 var color = d3.scaleSequential( d3.interpolateCool)
-    .domain([max_v, 0]) // Points per square pixel.
-var op_ = d3.scalePow().domain([0, 1]).range([-0.2,0.8]);
+    .domain([0, max_v]) // Points per square pixel.
+var op_ = d3.scalePow().domain([0, 1]).range([0,1]);
 
-console.log(color(0.1))
+console.log(tag_names)
 g.insert("g", "g")
     .selectAll("path")
     .data(densityData)
     .enter().append("path")
         .attr("d", d3.geoPath())
         .attr("fill", function(d, i) {
-            console.log(d);
             c = d3.rgb(color(d.value)).copy({opacity: op_(d.value)});
-            console.log(c);
             return c;
         })
 
