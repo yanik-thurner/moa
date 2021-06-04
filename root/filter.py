@@ -1,13 +1,17 @@
 import itertools
-
-import numpy as np
 from flask import request
 import pandas as pd
 from enum import Enum
 
 
 class Filter:
+    """
+    Prototype class for Filters, so that all Filter specific code only occurs in one place
+    """
     class FilterType(Enum):
+        """
+        Type of the filter, either BASEMAP or HEATMAP
+        """
         BASEMAP = '_b'
         HEATMAP = '_h'
 
@@ -16,28 +20,53 @@ class Filter:
         self.selected_values: list = []
         self.type = type
 
-    def initialize_data(self, data: pd.DataFrame):
+    def initialize_data(self, data: pd.DataFrame) -> None:
+        """
+        Initialize available values here.
+        """
         raise NotImplementedError
 
-    def clean(self):
+    def clean(self) -> None:
+        """
+        Clean the selected values, for example select all if the list is empty
+        """
         raise NotImplementedError
 
     def preprocess(self, data: pd.DataFrame):
+        """
+        Needed steps for preprocessing the data, for example renaming columns or merging entries. Should be done inplace.
+        @param data: the pandas DataFrame of the raw data
+        """
         raise NotImplementedError
 
     def filter(self, data: pd.DataFrame):
+        """
+        Filter the DataFrame with the selected filters. Should be done inplace.
+        @param data:
+        """
         raise NotImplementedError
 
     @property
     def column_name(self):
+        """
+        Return the name of the column of the filtered attribute
+        @return: name as string
+        """
         raise NotImplementedError
 
     def refresh_selection(self):
+        """
+        Fetch the transmitted data via the requests module. Set the selected values accordingly.
+        @return:
+        """
         raise NotImplementedError
 
 
 class FilterList(Filter):
-
+    """
+    Class that manages all filters. New filters should be added in the __init__ method. Implements Filter since it
+    should have all filter methods to call for each available filter.
+    """
     def __init__(self, type: Filter.FilterType = Filter.FilterType.BASEMAP):
         self._map = {}
         self._index = 0
@@ -46,6 +75,10 @@ class FilterList(Filter):
         self._map.update({(x := MediaTypeFilter(type)).column_name: x})
 
     def set_type(self, type: Filter.FilterType):
+        """
+        Set the type of the filter
+        @param type: filter type
+        """
         for filter_key in self._map.keys():
             self._map[filter_key].type = type
 
@@ -81,6 +114,10 @@ class FilterList(Filter):
 
     @property
     def column_name(self):
+        """
+        return lists of all implemented filter column names
+        @return: list of str
+        """
         cns = []
         for f in self:
             cns.append(f.column_name)

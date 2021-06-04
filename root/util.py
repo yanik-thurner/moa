@@ -3,12 +3,12 @@ from enum import Enum
 
 
 class PointType(Enum):
+    """
+    Enum for values of PointType column in the data list. Points with a value >= 0 are box points and have the index
+    of the data point they belong to as value.
+    """
     DATA = -1
     BORDER = -2
-
-
-class CountryType(Enum):
-    NONE = -1
 
 
 class Task:
