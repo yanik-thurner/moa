@@ -86,7 +86,7 @@ var BrowserText = (function () {
 })();
 
 
-const  width = 1000, height = 600, displayThreshold = 2000, scale_factor = 600,
+const  width = 1200, height = 1200, displayThreshold = 2000, scale_factor = 600,
     font_height = 3, font_family = "sans-serif";
 var c10 = d3.schemePaired;
 //var vertices = d3.range(10).map(function(d) {
@@ -107,7 +107,7 @@ orient = ({
 })
 
 
-var svg = d3.select("body").append("svg").attr("class",'heatmap').attr("viewBox", [0, 0, width, height]);//.attr("width", width).attr("height", height);
+var svg = d3.select("#map").append("svg").attr("class",'heatmap').attr("viewBox", [0, 0, width, height]);//.attr("width", width).attr("height", height);
 const g = svg.append("g");
 var path = g.selectAll("path");
 
