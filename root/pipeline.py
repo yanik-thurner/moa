@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
-from filter import FilterList
-from util import Task, PointType
+from root.filter import FilterList
+from root.util import Task, PointType
 import networkx as nx
 from sklearn.metrics.pairwise import euclidean_distances
 from scipy.spatial import Delaunay

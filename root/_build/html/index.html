@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Welcome to Maps of Anime’s documentation! &#8212; Maps of Anime 1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="welcome-to-maps-of-anime-s-documentation">
+<h1>Welcome to Maps of Anime’s documentation!<a class="headerlink" href="#welcome-to-maps-of-anime-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-root"></span><dl class="py class">
+<dt class="sig sig-object py" id="root.PointType">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">PointType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root.PointType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enum for values of PointType column in the data list. Points with a value &gt;= 0 are box points and have the index
+of the data point they belong to as value.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="root.Task">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">Task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root.Task" title="Permalink to this definition">¶</a></dt>
+<dd><p>A helper class to measure execution time of certain tasks.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="root.Task.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root.Task.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="root.Task.__weakref__">
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#root.Task.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._calculate_distances">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_calculate_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filtered_similarities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root._calculate_distances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales each value of the similarity matrix logarithmically
+&#64;param filtered_similarities: NxN similarity matrix
+&#64;return: NxN distance matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._filter_similarities">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_filter_similarities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairwise_similarities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_tags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root._filter_similarities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Placeholder method, since this is a pipeline step in the original implementation but, to this point, was not needed
+in our case.
+&#64;param pairwise_similarities: NxN matrix of similarities
+&#64;param all_tags: list of all tags
+&#64;return: filtered similarities and tags</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._generate_box">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_generate_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_distance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root._generate_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate points in the form of a rectangle around a certain point with provided width, height, and distance between
+those points.
+&#64;param x_center: X coordinate of box center
+&#64;param y_center: Y coordinate of box center
+&#64;param width: width of the box
+&#64;param height: height of the box
+&#64;param point_distance: distance between the points that form the box
+&#64;return: points that form the box</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._generate_boxes">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_generate_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root._generate_boxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>generates a box and moves a copy of it to all data point positions. Returns the list of box points
+&#64;param positions: np array of data points
+&#64;return: np array of box points</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._generate_edges">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_generate_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairwise_similarities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_percent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root._generate_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the edges based on similarities. Similarities are sorted descending, self loops are filtered and then a
+certain number of points are samples. From these samples the edges are drawn to the nearest points.
+&#64;param pairwise_similarities: NxN similiarity matrix as np.array
+&#64;param positions: positions resulting from dimensionality reduction
+&#64;param max_edges: soft maximum of edges as described in the paper
+&#64;param sample_percent: percent of overall points of how many best matches should be sampled
+&#64;return: list of lists containing pairs of points which are connected by edges.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._generate_random_border">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_generate_random_border</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root._generate_random_border" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates random points around the cluster of data points. The points are sampled randomly in each cell of a
+regular grid.
+&#64;param positions: positions of data points
+&#64;return: np array of random points around the cluster</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._jaccard_matrix">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_jaccard_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_tags</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags_column</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.series.Series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root._jaccard_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the Jaccard coefficient for each pair of tags which is defined as:
+J(t1, t2) = Number of common occurrences(t1, t2) / Number of individual occurrences(t1, t2)
+&#64;param all_tags: list of all tags
+&#64;param tags_column: tags column of the filtered data
+&#64;return: NxN matrix of jaccard coefficients where N is the number of all tags</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root._logarithmic_scaling">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">_logarithmic_scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">float</span><a class="headerlink" href="#root._logarithmic_scaling" title="Permalink to this definition">¶</a></dt>
+<dd><p>”
+Method to scale a similarity logarithmically to represent a distance, as described in the paper</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root.index">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#root.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main root method, gets called when a GET or POST at the main page occurs</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root.preprocess">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">raw_data:</span> <span class="pre">pandas.core.frame.DataFrame)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'pandas.core.frame.DataFrame'&gt;</span></em>, <em class="sig-param"><span class="pre">&lt;class</span> <span class="pre">'root.filter.FilterList'&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#root.preprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preprocessing pipeline, taking the raw data from the json file as a pandas DataFrame and clean it up, e.g. filter
+invalid values. Also runs all of the preprocessing steps required for each filter.
+&#64;param raw_data: raw data from json file as pandas DataFrame
+&#64;return: preprocessed dataframe and initialized filters.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="root.process">
+<span class="sig-prename descclassname"><span class="pre">root.</span></span><span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessed_data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters_base</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">root.filter.FilterList</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters_heat</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">root.filter.FilterList</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root.process" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Main processing pipeline of this application. The main tasks are:</dt><dd><ul class="simple">
+<li><p>Filtering the Data based on the selected filter values</p></li>
+<li><p>Calculate the pairwise similarities of the filtered tags</p></li>
+<li><p>Scale the similarities to better represent distances.</p></li>
+<li><p>Generate the edges for the basemap</p></li>
+<li><p>Space out the map points so that the text wont overlap less</p></li>
+<li><p>Generate the countries for the basemap</p></li>
+<li><p>Generate support points i.e. random points around the data for smoother edges outside and boxes points around
+the data for smoother edges inside</p></li>
+<li><p>Calculate the frequencies for the heatmap</p></li>
+<li><p>normalize the data points so that they can be scaled in the frontend</p></li>
+</ul>
+</dd>
+</dl>
+<p>&#64;param preprocessed_data: data resulting from the preprocess method as a Pandas DataFrame
+&#64;param filters_base: FilterList for Basemap filters
+&#64;param filters_heat: FilterList for Heatmap filters
+&#64;return: returns a tuple of:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>tags for the basemap</p></li>
+<li><p>position of data points including type, county, and number of occurrences</p></li>
+<li><p>list of edges edges referencing the index of the disappoints</p></li>
+<li><p>number of occurrences for heatmap</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Maps of Anime</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Dominik Hanko (1625726, Yanik Thurner (1625761).
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
