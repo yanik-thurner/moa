@@ -133,7 +133,8 @@ class StudioFilter(Filter):
         self.available_values = sorted(set(itertools.chain.from_iterable(data[self.column_name])))
 
     def clean(self):
-        pass
+        if "All" in self.selected_values or not len(self.selected_values):
+            self.selected_values = ["All"]
 
     def preprocess(self, data):
         # extract studio names from list
@@ -155,9 +156,6 @@ class StudioFilter(Filter):
     def refresh_selection(self):
         self.selected_values = x if (x := request.form.getlist(f'{self.column_name}{self.type.value}[]', type=str)) else ["All"]
 
-        if "All" in self.selected_values or not len(self.selected_values):
-            self.selected_values = ["All"]
-
 
 class ReleaseYearFilter(Filter):
     def refresh_selection(self):
@@ -167,15 +165,20 @@ class ReleaseYearFilter(Filter):
 
     def initialize_data(self, data):
         self.available_values = [x for x in range(data[self.column_name].min(), data[self.column_name].max())]
+        self.selected_values = self.available_values
 
     def clean(self):
         pass
 
     def preprocess(self, data):
-        pass
+        data[self.column_name] = [x["year"] for x in data["startDate"]]
+        mask = data[self.column_name].isna()
+        data.drop(data[mask].index, inplace=True)
+        data[self.column_name] = data[self.column_name].astype(int)
 
     def filter(self, data):
-        pass
+        mask = data[self.column_name].isin(self.selected_values)
+        data.drop(data[~mask].index, inplace=True)
 
     @property
     def column_name(self):
@@ -187,7 +190,8 @@ class MediaTypeFilter(Filter):
         self.available_values = sorted(filter(None, set(data[self.column_name])))
 
     def clean(self):
-        pass
+        if "All" in self.selected_values or not len(self.selected_values):
+            self.selected_values = ["All"]
 
     def preprocess(self, data):
         pass
@@ -203,5 +207,3 @@ class MediaTypeFilter(Filter):
 
     def refresh_selection(self):
         self.selected_values = x if (x := request.form.getlist(f'{self.column_name}{self.type.value}[]', type=str)) else ["All"]
-        if "All" in self.selected_values or not len(self.selected_values):
-            self.selected_values = ["All"]

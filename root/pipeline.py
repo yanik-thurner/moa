@@ -139,7 +139,6 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     adjacency += adjacency.T
     louvain = Louvain()
     basemap_countries = louvain.fit_transform(adjacency)
-    print(np.unique(basemap_countries))
     t.end()
 
     t = Task('Add support points')
@@ -164,8 +163,9 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     heat_tags = np.array(sorted(set(filtered_data_heat.tags.explode().drop_duplicates().dropna()),
                                key=lambda x: (heat_occurrences_dict[x], x),
                                reverse=True))
-    heat_tags = [x for x in heat_tags if x in filtered_tags]
-    heat_occurrences_sorted = [heat_occurrences_dict[x] for x in heat_tags]
+
+    heat_tags = [x for x in heat_tags]
+    heat_occurrences_sorted = [heat_occurrences_dict[x] if x in heat_tags else 0 for x in filtered_tags]
     t.end()
 
     # normalize point data
