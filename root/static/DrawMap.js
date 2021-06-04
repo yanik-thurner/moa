@@ -168,7 +168,7 @@ densityData.forEach((x,i) => {
 //     .range(["rgba(0,0,0,0)", "rgba(105,179,200,0.5)"])
 var color = d3.scaleSequential( d3.interpolateCool)
     .domain([0, max_v]) // Points per square pixel.
-var op_ = d3.scalePow().domain([0, 1]).range([0,1]);
+var op_ = d3.scalePow().domain([0, max_v]).range([0,1]);
 
 
 g.insert("g", "g")
