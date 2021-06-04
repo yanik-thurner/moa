@@ -23,6 +23,17 @@ function mergeBoxCells(cells){
     }
 }
 
+function mergeCountry(cells){
+    let countries = [];
+    cells.forEach((c, i) => {
+        while (countries.length <= c[0][3]) {
+            countries.push([]);
+        }
+        countries[c[0][3]] = countries[c[0][3]].concat(c[1]);
+    })
+    return countries;
+}
+
 function removeSupportPoints(vertices){
     var i = 0;
     while(i < vertices.length){
@@ -77,7 +88,7 @@ orient = ({
 })
 
 
-var svg = d3.select("body").append("svg").attr("viewBox", [0, 0, width, height]);//.attr("width", width).attr("height", height);
+var svg = d3.select("body").append("svg").attr("class",'heatmap').attr("viewBox", [0, 0, width, height]);//.attr("width", width).attr("height", height);
 const g = svg.append("g");
 var path = g.selectAll("path");
 
@@ -90,9 +101,17 @@ const cells = data.map((d, i) => [d, voronoi.cellPolygon(i)]);
 removeBorderCells(cells)
 mergeBoxCells(cells)
 removeSupportPoints(vertices)
+//country_cells = mergeCountry(cells)
+//concaveHull = d3.concaveHull().padding(10);
 
 path.data(cells).enter().append("path")
-    .attr("stroke", "none")
+    //.datum(topojson.merge(cells, cells.filter(function(d) { return d[0][3]===1; })))
+    // .attr("stroke", 'black')
+    // .attr("stroke-width", 1)
+    .attr("stroke", function (d, i) {
+        var country = d[0][3];
+        return c10[country%10]
+    })
     .attr("fill", function (d, i) {
         var country = d[0][3];
         return c10[country%10]
@@ -100,27 +119,70 @@ path.data(cells).enter().append("path")
     //    .attr("d", function(d) { return "M" + d.join("L") + "Z" } );
     .attr("d", polygon);
 
-function polygon(b) {
+function polygon(b, i) {
     //console.log(b)
-    d = b[1]
-    //TODO why can this be null?
-    if (b[0][2] !== -1 || d === null)
-        return null;
-    else
-        return "M" + d.join("L") + "Z";
+    d=b[1]
+    //d = d3.polygonHull(b)
+    // //TODO why can this be null?
+    // if (b[0][2] !== -1 || d === null)
+    //     return null;
+    // else
+    return "M" + d.join("L") + "Z";
 }
+
+dense_data = []
+heat_tags.forEach((x,i) => {
+    for(j = 0; j < i; j++){
+        dense_data.push(cells[i][0])
+    }
+})
+
+var densityData = d3.contourDensity()
+    .x(function(d, i) { return d[0]; })
+    .y(function(d, i) { return d[1]; })
+    .size([width, height])
+    .bandwidth(8)
+    (dense_data)
+
+max_v = 0;
+densityData.forEach((x,i) => {
+    if (x.value > max_v)
+        max_v = x.value;
+})
+console.log(max_v)
+
+
+// var color = d3.scalePow()
+//     .domain([0, max_v]) // Points per square pixel.
+//     .range(["rgba(0,0,0,0)", "rgba(105,179,200,0.5)"])
+var color = d3.scaleSequential( d3.interpolateCool)
+    .domain([max_v, 0]) // Points per square pixel.
+var op_ = d3.scalePow().domain([0, 1]).range([-0.2,0.8]);
+
+console.log(color(0.1))
+g.insert("g", "g")
+    .selectAll("path")
+    .data(densityData)
+    .enter().append("path")
+        .attr("d", d3.geoPath())
+        .attr("fill", function(d, i) {
+            console.log(d);
+            c = d3.rgb(color(d.value)).copy({opacity: op_(d.value)});
+            console.log(c);
+            return c;
+        })
 
 g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3)
     //.attr("transform", function(d) { return "translate(" + d + ")"; })
     .attr("cx", function (d) {
-        if (d[2] !== -2 && draw_cirlce){
+        if (d[2] !== -2 ){//&& draw_cirlce){
             return d[0];
         }
         else
             null;
     })
     .attr("cy", function (d) {
-        if (d[2] !== -2 && draw_cirlce){
+        if (d[2] !== -2 ){//&& draw_cirlce){
             return d[1];
         }
         else

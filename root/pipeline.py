@@ -137,7 +137,10 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
 
     # normalize point data
     positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
-    return filtered_tags.tolist(), positions.tolist(), edges.tolist()
+
+
+    heat_tags = [all_occurrences[x] for x in filtered_tags]
+    return filtered_tags.tolist(), positions.tolist(), edges.tolist(), heat_tags
 
 
 def _generate_edges(pairwise_similarities: np.ndarray, positions, max_edges=6, sample_percent=0.30):

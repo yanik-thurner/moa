@@ -1,6 +1,6 @@
 flask
 pandas
-sklearn
+scikit-learn
 numpy
 networkx
 scikit-network==0.12.1
