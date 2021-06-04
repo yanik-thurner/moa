@@ -15,6 +15,7 @@
     <script>
         $(function(){
             $("#slider-range_b").slider({
+                tip:true,
                 range: true,
                 min: {{filters_base['seasonYear'].available_values[0]}},
                 max: {{filters_base['seasonYear'].available_values[-1]}},
