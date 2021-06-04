@@ -13,20 +13,36 @@
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
-        $(function () {
-            $("#slider-range").slider({
+        $(function(){
+            $("#slider-range_b").slider({
                 range: true,
-                min: {{filters['seasonYear'].available_values[0]}},
-                max: {{filters['seasonYear'].available_values[-1]}},
-                values: [{{filters['seasonYear'].available_values[0]}}, {{filters['seasonYear'].available_values[-1]}}],
+                min: {{filters_base['seasonYear'].available_values[0]}},
+                max: {{filters_base['seasonYear'].available_values[-1]}},
+                values: [{{filters_base['seasonYear'].available_values[0]}}, {{filters_base['seasonYear'].available_values[-1]}}],
 
                 slide: function (event, ui) {
-                    $("#seasonYear_min").val(ui.values[0]);
-                    $("#seasonYear_max").val(ui.values[1]);
+                    $("#seasonYear_min_b").val(ui.values[0]);
+                    $("#seasonYear_max_b").val(ui.values[1]);
                 }
             });
-            $("#seasonYear_min").val($("#slider-range").slider("values", 0));
-            $("#seasonYear_max").val($("#slider-range").slider("values", 1));
+            $("#seasonYear_min_b").val($("#slider-range_b").slider("values", 0));
+            $("#seasonYear_max_b").val($("#slider-range_b").slider("values", 1));
+        });
+
+        $(function(){
+            $("#slider-range_h").slider({
+                range: true,
+                min: {{filters_heat['seasonYear'].available_values[0]}},
+                max: {{filters_heat['seasonYear'].available_values[-1]}},
+                values: [{{filters_heat['seasonYear'].available_values[0]}}, {{filters_heat['seasonYear'].available_values[-1]}}],
+
+                slide: function (event, ui) {
+                    $("#seasonYear_min_h").val(ui.values[0]);
+                    $("#seasonYear_max_h").val(ui.values[1]);
+                }
+            });
+            $("#seasonYear_min_h").val($("#slider-range_h").slider("values", 0));
+            $("#seasonYear_max_h").val($("#slider-range_h").slider("values", 1));
         });
     </script>
 
@@ -68,90 +84,104 @@
 <h1>Maps of Anime</h1>
 
 <div style="width: 100%; display: flex;">
-<div style="width: 50%; ">
-    <form method="post">
-        <table id="form">
-            <tr>
-                <td><label>Studios: </label></td>
-                <td><select class="js-example-basic-multiple" name="studios[]" multiple="multiple">
-                    <option value="All" {% if "All" in filters['studios'].selected_values %} selected="true" {% endif %}>
-                        All
-                    </option>
-                    {% for studio in filters['studios'].available_values %}
-                        <option value="{{ studio }}" {% if studio in filters['studios'].selected_values %}
-                                selected="true" {% endif %}> {{ studio }}</option>
-                    {% endfor %}
-                </select></td>
-            </tr>
-            <tr>
-                <td><label>Release Year: </label></td>
-                <td>
-                    <input type="text" id="seasonYear_min" name="seasonYear_min" readonly
-                           style="width: 40px; border:0;  font-weight:bold;"> - <input type="text" id="seasonYear_max"
-                                                                                       name="seasonYear_max" readonly
-                                                                                       style="width: 40px; border:0;  font-weight:bold;">
-                    <div id="slider-range"></div>
-                </td>
+    <div style="width: 50%; ">
+        <form method="post">
+            <table id="form">
+                <tr>
+                    <td><h2>Basemap</h2></td>
+                </tr>
+                <tr>
+                    <td><label>Studios: </label></td>
+                    <td><select class="js-example-basic-multiple" name="studios_b[]" multiple="multiple">
+                        <option value="All" {% if "All" in filters_base['studios'].selected_values %}
+                                selected="true" {% endif %}>
+                            All
+                        </option>
+                        {% for studio in filters_base['studios'].available_values %}
+                            <option value="{{ studio }}" {% if studio in filters_base['studios'].selected_values %}
+                                    selected="true" {% endif %}> {{ studio }}</option>
+                        {% endfor %}
+                    </select></td>
+                </tr>
+                <tr>
+                    <td><label>Release Year: </label></td>
+                    <td>
+                        <input type="text" id="seasonYear_min_b" name="seasonYear_min_b" readonly
+                               style="width: 40px; border:0;  font-weight:bold;"> - <input type="text"
+                                                                                           id="seasonYear_max_b"
+                                                                                           name="seasonYear_max_b"
+                                                                                           readonly
+                                                                                           style="width: 40px; border:0;  font-weight:bold;">
+                        <div id="slider-range_b"></div>
+                    </td>
 
-            </tr>
-            <tr>
-                <td><label>Media Type: </label></td>
-                <td><select class="js-example-basic-multiple" name="format[]" multiple="multiple">
-                    <option value="All" {% if "All" in filters['format'].selected_values %} selected="true" {% endif %}>
-                        All
-                    </option>
-                    {% for format in filters['format'].available_values %}
-                        <option value="{{ format }}" {% if format in filters['format'].selected_values %}
-                                selected="true" {% endif %}> {{ format }}</option>
-                    {% endfor %}
-                </select></td>
-            </tr>
-        </table>
+                </tr>
+                <tr>
+                    <td><label>Media Type: </label></td>
+                    <td><select class="js-example-basic-multiple" name="format_b[]" multiple="multiple">
+                        <option value="All" {% if "All" in filters_base['format'].selected_values %}
+                                selected="true" {% endif %}>
+                            All
+                        </option>
+                        {% for format in filters_base['format'].available_values %}
+                            <option value="{{ format }}" {% if format in filters_base['format'].selected_values %}
+                                    selected="true" {% endif %}> {{ format }}</option>
+                        {% endfor %}
+                    </select></td>
+                </tr>
+            </table>
 
-        <input type="submit">
-    </form>
-</div>
-<div style="width: 50%; flex-grow: 1;">
-    <form method="post">
-        <table id="form">
-            <tr>
-                <td><label>Studios: </label></td>
-                <td><select class="js-example-basic-multiple" name="studios[]" multiple="multiple">
-                    <option value="All" {% if "All" in filters['studios'].selected_values %} selected="true" {% endif %}>
-                        All
-                    </option>
-                    {% for studio in filters['studios'].available_values %}
-                        <option value="{{ studio }}" {% if studio in filters['studios'].selected_values %}
-                                selected="true" {% endif %}> {{ studio }}</option>
-                    {% endfor %}
-                </select></td>
-            </tr>
-            <tr>
-                <td><label>Release Year: </label></td>
-                <td>
-                    <input type="text" id="seasonYear_min" name="seasonYear_min" readonly
-                           style="width: 40px; border:0;  font-weight:bold;"> - <input type="text" id="seasonYear_max"
-                                                                                       name="seasonYear_max" readonly
-                                                                                       style="width: 40px; border:0;  font-weight:bold;">
-                    <div id="slider-range"></div>
-                </td>
+            <input type="submit">
+        </form>
+    </div>
+    <div style="width: 50%; flex-grow: 1;">
+        <form method="post">
+            <table id="form">
+                <tr>
+                    <td><h2>Heatmap</h2></td>
+                </tr>
+                <tr>
+                    <td><label>Studios: </label></td>
+                    <td><select class="js-example-basic-multiple" name="studios_h[]" multiple="multiple">
+                        <option value="All" {% if "All" in filters_heat['studios'].selected_values %}
+                                selected="true" {% endif %}>
+                            All
+                        </option>
+                        {% for studio in filters_heat['studios'].available_values %}
+                            <option value="{{ studio }}" {% if studio in filters_heat['studios'].selected_values %}
+                                    selected="true" {% endif %}> {{ studio }}</option>
+                        {% endfor %}
+                    </select></td>
+                </tr>
+                <tr>
+                    <td><label>Release Year: </label></td>
+                    <td>
+                        <input type="text" id="seasonYear_min_h" name="seasonYear_min_h" readonly
+                               style="width: 40px; border:0;  font-weight:bold;"> - <input type="text"
+                                                                                           id="seasonYear_max_h"
+                                                                                           name="seasonYear_max_h"
+                                                                                           readonly
+                                                                                           style="width: 40px; border:0;  font-weight:bold;">
+                        <div id="slider-range_h"></div>
+                    </td>
 
-            </tr>
-            <tr>
-                <td><label>Media Type: </label></td>
-                <td><select class="js-example-basic-multiple" name="format[]" multiple="multiple">
-                    <option value="All" {% if "All" in filters['format'].selected_values %} selected="true" {% endif %}>
-                        All
-                    </option>
-                    {% for format in filters['format'].available_values %}
-                        <option value="{{ format }}" {% if format in filters['format'].selected_values %}
-                                selected="true" {% endif %}> {{ format }}</option>
-                    {% endfor %}
-                </select></td>
-            </tr>
-        </table>
-    </form>
-</div>
+                </tr>
+                <tr>
+                    <td><label>Media Type: </label></td>
+                    <td><select class="js-example-basic-multiple" name="format_h[]" multiple="multiple">
+                        <option value="All" {% if "All" in filters_heat['format'].selected_values %}
+                                selected="true" {% endif %}>
+                            All
+                        </option>
+                        {% for format in filters_heat['format'].available_values %}
+                            <option value="{{ format }}" {% if format in filters_heat['format'].selected_values %}
+                                    selected="true" {% endif %}> {{ format }}</option>
+                        {% endfor %}
+                    </select></td>
+                </tr>
+            </table>
+        </form>
+    </div>
 </div>
 
 <script type="text/javascript" src="{{ url_for('static', filename = 'DrawMap.js') }}"></script>

@@ -123,21 +123,21 @@ def process(preprocessed_data: pd.DataFrame, filters: FilterList):
     # attach them
     positions = np.vstack((positions, random_points, boxes))
     # add adtiontal columns
-    num_box_points = int(len(boxes)/len(filtered_tags))
+    num_box_points_per_box = int(len(boxes)/len(filtered_tags))
+    num_support = len(positions) - len(filtered_tags)
     point_types = np.array([[PointType.DATA.value]*len(filtered_tags) +
                             [PointType.BORDER.value]*len(random_points) +
-                            sorted([x for x in range(len(all_tags))] * num_box_points)]).T
-    point_countries = np.array([basemap_countries.tolist() + [CountryType.NONE.value] * (len(positions) - len(filtered_tags))]).T
-    point_occurrences = None
+                            sorted([x for x in range(len(all_tags))] * num_box_points_per_box)]).T
+    point_countries = np.array([basemap_countries.tolist() + [CountryType.NONE.value] * num_support]).T
+    point_occurrences = np.array([[all_occurrences[x] for x in filtered_tags] + [0] * num_support]).T
 
-    positions = np.hstack((positions, point_types, point_countries))
+    positions = np.hstack((positions, point_types, point_countries, point_occurrences))
     plt.scatter(positions[:,0], positions[:,1])
     plt.show()
     t.end()
 
     # normalize point data
     positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
-
 
     heat_tags = [all_occurrences[x] for x in filtered_tags]
     return filtered_tags.tolist(), positions.tolist(), edges.tolist(), heat_tags

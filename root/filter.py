@@ -3,12 +3,18 @@ import itertools
 import numpy as np
 from flask import request
 import pandas as pd
+from enum import Enum
 
 
 class Filter:
-    def __init__(self):
+    class FilterType(Enum):
+        BASEMAP = '_b'
+        HEATMAP = '_h'
+
+    def __init__(self, type: FilterType):
         self.available_values: list = []
         self.selected_values: list = []
+        self.type = type
 
     def initialize_data(self, data: pd.DataFrame):
         raise NotImplementedError
@@ -32,12 +38,16 @@ class Filter:
 
 class FilterList(Filter):
 
-    def __init__(self):
+    def __init__(self, type: Filter.FilterType = Filter.FilterType.BASEMAP):
         self._map = {}
         self._index = 0
-        self._map.update({(x := StudioFilter()).column_name: x})
-        self._map.update({(x := ReleaseYearFilter()).column_name: x})
-        self._map.update({(x := MediaTypeFilter()).column_name: x})
+        self._map.update({(x := StudioFilter(type)).column_name: x})
+        self._map.update({(x := ReleaseYearFilter(type)).column_name: x})
+        self._map.update({(x := MediaTypeFilter(type)).column_name: x})
+
+    def set_type(self, type: Filter.FilterType):
+        for filter_key in self._map.keys():
+            self._map[filter_key].type = type
 
     def __iter__(self):
         return self
