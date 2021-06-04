@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
-from root.filter import FilterList
-from root.util import Task, PointType
+from filter import FilterList
+from util import Task, PointType
 import networkx as nx
 from sklearn.metrics.pairwise import euclidean_distances
 from scipy.spatial import Delaunay
@@ -134,7 +134,7 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
 
     t = Task('Generating Countries')
     adjacency = np.zeros((len(filtered_tags), len(filtered_tags)))
-    for edge in _generate_edges(filtered_similarities, positions, 6, 0.3):
+    for edge in _generate_edges(filtered_similarities, positions, 3, 0.6):
         adjacency[edge[0], edge[1]] += 1
     adjacency += adjacency.T
     louvain = Louvain()
