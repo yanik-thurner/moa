@@ -99,20 +99,16 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
 
     t = Task('Spacing out Mappoints')
     G = nx.Graph()
-    G.add_edges_from(edges)
-    """
     tri = Delaunay(positions)
     for path in tri.simplices:
         nx.add_path(G, path)
-    
+    G.add_edges_from(edges)
 
     graph_positions = nx.kamada_kawai_layout(G)
     for k in sorted(graph_positions.keys()):
         positions[k, 0] = graph_positions[k][0]
         positions[k, 1] = graph_positions[k][1]
-    t.end()"""
-
-
+    t.end()
 
     t = Task('Generating Countries')
     adjacency = np.zeros((len(filtered_tags), len(filtered_tags)))
@@ -148,11 +144,12 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     positions[:, :2] = (positions[:, :2] / np.max(np.abs(positions[:, :2])))
 
     t = Task('Calculate Heatmap occurrences')
-    heat_occurrences_dict = dict(filtered_data_base.tags.explode().value_counts())
-    heat_tag = np.array(sorted(set(filtered_data_base.tags.explode().drop_duplicates().dropna()),
-                               key=lambda x: (all_occurrences[x], x),
+    heat_occurrences_dict = dict(filtered_data_heat.tags.explode().value_counts())
+    heat_tags = np.array(sorted(set(filtered_data_heat.tags.explode().drop_duplicates().dropna()),
+                               key=lambda x: (heat_occurrences_dict[x], x),
                                reverse=True))
-    heat_occurrences_sorted = [heat_occurrences_dict[x] for x in heat_tag]
+    heat_tags = [x for x in heat_tags if x in filtered_tags]
+    heat_occurrences_sorted = [heat_occurrences_dict[x] for x in heat_tags]
     t.end()
 
     return filtered_tags.tolist(), positions.tolist(), edges.tolist(), heat_occurrences_sorted
