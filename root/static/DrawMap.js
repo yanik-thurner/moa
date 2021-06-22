@@ -170,17 +170,17 @@ var color = d3.scaleSequential( d3.interpolateCool)
     .domain([0, max_v]) // Points per square pixel.
 var op_ = d3.scalePow().domain([0, max_v]).range([0,1]);
 
-
-g.insert("g", "g")
-    .selectAll("path")
-    .data(densityData)
-    .enter().append("path")
+if(show_heatmap) {
+    g.insert("g", "g")
+        .selectAll("path")
+        .data(densityData)
+        .enter().append("path")
         .attr("d", d3.geoPath())
-        .attr("fill", function(d, i) {
+        .attr("fill", function (d, i) {
             c = d3.rgb(color(d.value)).copy({opacity: op_(d.value)});
             return c;
         })
-
+}
 g.selectAll("circle").data(vertices).enter().append("circle").attr("r", 0.3).attr("fill", "None")
     //.attr("transform", function(d) { return "translate(" + d + ")"; })
     .attr("cx", function (d) {
@@ -206,12 +206,14 @@ cells.forEach(([x,],i) => {
 })
 var font_sz = d3.scalePow().domain([0, max_base]).range([3,5]);
 
-g.selectAll("line").data(edges).enter().append("line")
-    .attr("x1", (d) => line_offset(d, "x1"))
-    .attr("y1", (d) => line_offset(d, "y1"))
-    .attr("x2", (d) => line_offset(d, "x2"))
-    .attr("y2", (d) => line_offset(d, "y2"))
-    .attr("style", "stroke:rgb(70,70,70);stroke-width:0.3;stroke-opacity: .8");
+if(show_edges) {
+    g.selectAll("line").data(edges).enter().append("line")
+        .attr("x1", (d) => line_offset(d, "x1"))
+        .attr("y1", (d) => line_offset(d, "y1"))
+        .attr("x2", (d) => line_offset(d, "x2"))
+        .attr("y2", (d) => line_offset(d, "y2"))
+        .attr("style", "stroke:rgb(70,70,70);stroke-width:0.3;stroke-opacity: .8");
+}
 
 //console.log({{ tags | safe  }})
 g.attr("class", "label")

@@ -67,7 +67,7 @@ def preprocess(raw_data: pd.DataFrame) -> (pd.DataFrame, FilterList):
     return df, filters
 
 
-def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_heat: FilterList):
+def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_heat: FilterList, show_edges=True, show_heatmap=True):
     """
     Main processing pipeline of this application. The main tasks are:
         - Filtering the Data based on the selected filter values

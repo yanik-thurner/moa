@@ -11,7 +11,6 @@ filters_heat: FilterList = None
 CACHE_LOCATION = '../cached_data.pkl'
 f = 'false'
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     """
@@ -19,10 +18,18 @@ def index():
     """
     global filters_base
     global filters_heat
+    global first
     filters_base.refresh_selection()
     filters_base.clean()
     filters_heat.refresh_selection()
     filters_heat.clean()
+
+    if len(request.form) == 0:
+        show_edges = True
+        show_heatmap = True
+    else:
+        show_edges = request.form.get('show_edges', type=bool, default=False)
+        show_heatmap = request.form.get('show_heatmap', type=bool, default=False)
 
     t = pipeline.Task('Processing Pipeline')
     tags, basemap_points, basemap_edges, heat_tags = pipeline.process(preprocessed_data, filters_base, filters_heat)
@@ -33,7 +40,8 @@ def index():
                            basemap_points=basemap_points,
                            basemap_edges=basemap_edges,
                            heat_tags=heat_tags,
-                           tags=tags, circle=f)
+                           tags=tags, circle=f,
+                           show_edges=show_edges, show_heatmap=show_heatmap)
 
 
 if __name__ == "__main__":

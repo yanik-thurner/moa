@@ -74,6 +74,8 @@
         var tag_names = {{ tags | safe  }};
         var edges = {{ basemap_edges | safe }};
         var heat_tags = {{ heat_tags | safe }};
+        var show_edges = {{ show_edges | tojson  }};
+        var show_heatmap = {{ show_heatmap | tojson  }};
     </script>
 
     <!-- TopoJson -->
@@ -135,6 +137,10 @@
                             {% endfor %}
                         </select></td>
                     </tr>
+                        <tr>
+                        <td><label>Show Edges: </label></td>
+                            <td><input type="checkbox" id="show_edges" name="show_edges" {% if show_edges %} checked {% endif %} ></td>
+                    </tr>
                 </table>
                 <table id="form">
                     <tr>
@@ -178,6 +184,10 @@
                                         selected="true" {% endif %}> {{ format }}</option>
                             {% endfor %}
                         </select></td>
+                    </tr>
+                    <tr>
+                        <td><label>Show Heatmap: </label></td>
+                        <td><input type="checkbox" id="show_heatmap" name="show_heatmap" {% if show_heatmap %} checked {% endif %}></td>
                     </tr>
                 </table>
                 <div style="  width: 100%;">
