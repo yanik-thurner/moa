@@ -62,4 +62,4 @@ if __name__ == "__main__":
     filters_heat.set_type(Filter.FilterType.HEATMAP)
     t.end()
 
-    app.run(debug=False)
+    app.run(debug=True)

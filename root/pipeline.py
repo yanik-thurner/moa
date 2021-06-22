@@ -117,7 +117,7 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
     t.end()
 
     t = Task('Generating Edges')
-    edges = _generate_edges(filtered_similarities, positions, 2, 0.2)
+    edges = _generate_edges(filtered_similarities, positions, 3, 0.4)
     t.end()
 
     t = Task('Spacing out Mappoints')
@@ -134,7 +134,7 @@ def process(preprocessed_data: pd.DataFrame, filters_base: FilterList, filters_h
 
     t = Task('Generating Countries')
     adjacency = np.zeros((len(filtered_tags), len(filtered_tags)))
-    for edge in _generate_edges(filtered_similarities, positions, 3, 0.6):
+    for edge in _generate_edges(filtered_similarities, positions, 5, 0.3):
         adjacency[edge[0], edge[1]] += 1
     adjacency += adjacency.T
     louvain = Louvain()
