@@ -1,5 +1,8 @@
 Maps of Anime
 ===
+
+For legal reasons, I removed the data we used, as well as the scraping script. We are aware that the git workflow we used is not best practice: putting too many changes into one commit with a non descriptive commit message. But the code was never ment to be published, and we needed to meet deadlines. We were young and needed the ECTS.
+
 ## Idea
 <img width="200" align="right" src="https://i.imgur.com/nNG1JAt.png">
 
